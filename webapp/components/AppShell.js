@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { TrendingUp, School, Users, LogOut } from 'lucide-react';
+import { TrendingUp, School, Users, LogOut, Calendar, DollarSign } from 'lucide-react';
 import { useAuth } from '../lib/AuthProvider';
 
 export default function AppShell({ children }) {
@@ -25,8 +25,12 @@ export default function AppShell({ children }) {
   const nav = [
     { href: '/dashboard', label: 'Dashboard', icon: TrendingUp },
     { href: '/bookings', label: 'Bookings', icon: School },
+    { href: '/calendar', label: 'Calendar', icon: Calendar },
   ];
-  if (profile.role === 'approver') nav.push({ href: '/team', label: 'Team', icon: Users });
+  if (profile.role === 'approver') {
+    nav.push({ href: '/team', label: 'Team', icon: Users });
+    nav.push({ href: '/pricing', label: 'Pricing', icon: DollarSign });
+  }
 
   return (
     <div className="min-h-screen flex">

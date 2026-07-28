@@ -6,7 +6,9 @@ export const EVENT_TYPES = [
   'School Graduation',
   'Other',
 ];
-export const PACKAGES = ['Package A', 'Package B', 'Package C', 'Special Offer'];
+export const EVENT_TIMES = ['10:00 - 12:00', '09:00 - 11:00', '10:30 - 12:30', '10:00 - 11:30'];
+// Packages and their rates now live in the package_rates table (managed
+// from the Pricing tab), not here - see components/BookingForm.js.
 export const STATUS_ALL = ['Tentative', 'Deposit Pending', 'Confirmed', 'Completed', 'Not Interested', 'Cancelled'];
 export const DEPOSIT_STATUSES = ['Not Requested', 'Requested', 'Partial', 'Received'];
 

@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [venueFilter, setVenueFilter] = useState('Both');
 
   useEffect(() => {
     if (!profile) return;
@@ -35,36 +36,57 @@ export default function DashboardPage() {
     });
   }, [profile]);
 
+  const scoped = useMemo(
+    () => (venueFilter === 'Both' ? bookings : bookings.filter((b) => b.venue === venueFilter)),
+    [bookings, venueFilter]
+  );
+
   const stats = useMemo(() => {
     const s = { Tentative: 0, 'Deposit Pending': 0, Confirmed: 0, Completed: 0, 'Not Interested': 0, Cancelled: 0 };
     let students = 0, pendingFollowUps = 0;
     const today = new Date().toISOString().slice(0, 10);
-    bookings.forEach((b) => {
+    scoped.forEach((b) => {
       s[b.booking_status] = (s[b.booking_status] || 0) + 1;
       if (b.booking_status === 'Confirmed' || b.booking_status === 'Completed') students += parseFloat(b.number_of_students) || 0;
       if ((b.booking_status === 'Tentative' || b.booking_status === 'Deposit Pending') && b.follow_up_date && b.follow_up_date <= today) pendingFollowUps++;
     });
-    return { s, students, pendingFollowUps, total: bookings.length };
-  }, [bookings]);
+    return { s, students, pendingFollowUps, total: scoped.length };
+  }, [scoped]);
 
   const pieData = Object.entries(stats.s).filter(([, v]) => v > 0).map(([name, value]) => ({ name, value }));
-  const venueBarData = VENUES.map((v) => ({
+  const venuesToChart = venueFilter === 'Both' ? VENUES : [venueFilter];
+  const venueBarData = venuesToChart.map((v) => ({
     venue: v,
     Tentative: bookings.filter((b) => b.venue === v && b.booking_status === 'Tentative').length,
     Confirmed: bookings.filter((b) => b.venue === v && (b.booking_status === 'Confirmed' || b.booking_status === 'Completed')).length,
   }));
 
   const today = new Date().toISOString().slice(0, 10);
-  const upcoming = bookings
+  const upcoming = scoped
     .filter((b) => (b.booking_status === 'Tentative' || b.booking_status === 'Deposit Pending') && b.follow_up_date && b.follow_up_date <= today)
     .sort((a, b) => a.follow_up_date.localeCompare(b.follow_up_date))
     .slice(0, 6);
 
   return (
     <AppShell>
-      <header className="bg-white border-b border-slate-200 px-8 py-5">
-        <h1 className="font-display text-xl font-bold text-slate-900">Overview</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Playo &amp; Oh Chateau school events</p>
+      <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-xl font-bold text-slate-900">Overview</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Playo &amp; Oh Chateau school events</p>
+        </div>
+        <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50">
+          {['Both', ...VENUES].map((v) => (
+            <button
+              key={v}
+              onClick={() => setVenueFilter(v)}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                venueFilter === v ? 'bg-white shadow-sm text-navy' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {v === 'Both' ? 'Both venues' : v}
+            </button>
+          ))}
+        </div>
       </header>
       <div className="p-8">
         {loading ? (

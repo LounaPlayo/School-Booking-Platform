@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { X, Lock, ShieldCheck } from 'lucide-react';
 import {
-  VENUES, EVENT_TYPES, PACKAGES, STATUS_ALL, DEPOSIT_STATUSES,
+  VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES,
   isStatusLocked, isDepositLocked, isSealed, balanceDue,
 } from '../lib/constants';
 
@@ -18,7 +18,7 @@ function Field({ label, children, span }) {
   );
 }
 
-export default function BookingForm({ booking, existing, profile, onCancel, onSave, onDeleteRequest, namesById }) {
+export default function BookingForm({ booking, existing, profile, packageRates, onCancel, onSave, onDeleteRequest, namesById }) {
   const [b, setB] = useState(booking);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -27,8 +27,35 @@ export default function BookingForm({ booking, existing, profile, onCancel, onSa
   const depositLocked = existing && isDepositLocked(booking) && !isApprover;
   const overriding = existing && (isStatusLocked(booking) || isDepositLocked(booking)) && isApprover;
   const sealed = existing && isSealed(booking);
+  const rateMap = Object.fromEntries((packageRates || []).map((r) => [r.package_name, r.rate]));
+  const packageOptions = [...(packageRates || []).map((r) => r.package_name), 'Special Offer'];
 
-  function set(k, v) { setB((prev) => ({ ...prev, [k]: v })); }
+  function set(k, v) {
+    setB((prev) => {
+      const next = { ...prev, [k]: v };
+
+      // Selecting Deposit Received directly confirms the booking too -
+      // the two should never be out of sync, since "sealed" (and
+      // therefore delete-proof) requires both to be true together.
+      if (k === 'deposit_status' && v === 'Received') {
+        next.booking_status = 'Confirmed';
+      }
+
+      // Packages with a set rate auto-price against the student count.
+      // Special Offer has no fixed rate - it's left for manual entry and
+      // should be confirmed with an approver before the booking is finalized.
+      if (k === 'package_selected' && rateMap[v] !== undefined) {
+        const students = parseFloat(next.number_of_students) || 0;
+        next.total_price = (rateMap[v] * students).toString();
+      }
+      if (k === 'number_of_students' && rateMap[next.package_selected] !== undefined) {
+        const students = parseFloat(v) || 0;
+        next.total_price = (rateMap[next.package_selected] * students).toString();
+      }
+
+      return next;
+    });
+  }
 
   async function handleSave() {
     if (!b.school_name?.trim()) { setError('School name is required.'); return; }
@@ -85,14 +112,22 @@ export default function BookingForm({ booking, existing, profile, onCancel, onSa
           <Field label="Phone"><input className={inputCls} value={b.phone || ''} onChange={(e) => set('phone', e.target.value)} /></Field>
           <Field label="Email" span><input className={inputCls} value={b.email || ''} onChange={(e) => set('email', e.target.value)} /></Field>
           <Field label="Event Date"><input type="date" className={inputCls} value={b.event_date || ''} onChange={(e) => set('event_date', e.target.value)} /></Field>
-          <Field label="Event Time"><input className={inputCls} value={b.event_time || ''} onChange={(e) => set('event_time', e.target.value)} placeholder="e.g. 10:00-12:00" /></Field>
+          <Field label="Event Time">
+            <select className={inputCls} value={b.event_time || ''} onChange={(e) => set('event_time', e.target.value)}>
+              <option value="">Select a time</option>
+              {EVENT_TIMES.map((v) => <option key={v}>{v}</option>)}
+            </select>
+          </Field>
           <Field label="Grade Level / Age"><input className={inputCls} value={b.grade_level || ''} onChange={(e) => set('grade_level', e.target.value)} /></Field>
           <Field label="# Students"><input type="number" className={inputCls} value={b.number_of_students || ''} onChange={(e) => set('number_of_students', e.target.value)} /></Field>
           <Field label="# Chaperones"><input type="number" className={inputCls} value={b.number_of_chaperones || ''} onChange={(e) => set('number_of_chaperones', e.target.value)} /></Field>
           <Field label="Package">
             <select className={inputCls} value={b.package_selected || ''} onChange={(e) => set('package_selected', e.target.value)}>
-              {PACKAGES.map((v) => <option key={v}>{v}</option>)}
+              {packageOptions.map((v) => <option key={v}>{v}</option>)}
             </select>
+            {b.package_selected === 'Special Offer' && (
+              <p className="text-[11px] text-amber-700 mt-1">Special pricing - enter manually and confirm with an approver before finalizing.</p>
+            )}
           </Field>
           <Field label="Total Price (AED)"><input type="number" className={inputCls} value={b.total_price || ''} onChange={(e) => set('total_price', e.target.value)} /></Field>
           <Field label="Deposit Required (AED)"><input type="number" className={inputCls} value={b.deposit_required || ''} onChange={(e) => set('deposit_required', e.target.value)} disabled={depositLocked} /></Field>

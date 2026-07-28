@@ -14,6 +14,7 @@ export default function BookingsPage() {
   const { profile } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [namesById, setNamesById] = useState({});
+  const [packageRates, setPackageRates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [venueFilter, setVenueFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -25,14 +26,16 @@ export default function BookingsPage() {
 
   async function loadAll() {
     setLoading(true);
-    const [{ data: b }, { data: profiles }] = await Promise.all([
+    const [{ data: b }, { data: profiles }, { data: rates }] = await Promise.all([
       supabase.from('bookings').select('*').order('event_date', { ascending: true }),
       supabase.from('profiles').select('id, name'),
+      supabase.from('package_rates').select('*').order('package_name'),
     ]);
     setBookings(b || []);
     const map = {};
     (profiles || []).forEach((p) => { map[p.id] = p.name; });
     setNamesById(map);
+    setPackageRates(rates || []);
     setLoading(false);
   }
 
@@ -191,6 +194,7 @@ export default function BookingsPage() {
           existing={!!editing.id}
           profile={profile}
           namesById={namesById}
+          packageRates={packageRates}
           onCancel={() => { setShowForm(false); setEditing(null); }}
           onSave={saveBooking}
           onDeleteRequest={(b) => { setShowForm(false); setDeleteConfirm(b); }}
