@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f5f6f8;
+}
+.font-display {
+  font-family: 'Space Grotesk', sans-serif;
+}
+.font-mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+.bg-navy {
+  background: #14213d;
+}
+.text-navy {
+  color: #14213d;
+}
+.nav-active {
+  background: #f2a93b;
+  color: #14213d;
+}
+.nav-inactive {
+  color: rgba(255, 255, 255, 0.7);
+}
+.nav-inactive:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+.btn-primary {
+  background: #14213d;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #1e2d52;
+}
+.seal-badge {
+  color: #c1440e;
+}
+.seal-banner {
+  background: #fff3ec;
+  border-color: #f3c9ad;
+  color: #9a3412;
+}
+.override-banner {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(20, 33, 61, 0.14);
+  border-color: #14213d;
+}
+.modal-backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+.approver-chip {
+  background: #f2a93b;
+  color: #14213d;
+}
+.agent-chip {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
