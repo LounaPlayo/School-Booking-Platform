@@ -1,4 +1,4 @@
-# School Events Booking Platform
+# School Events Booking Platform 
 
 A real, standalone booking tool for Playo and Oh Chateau school events —
 dashboard, bookings list/form, team roles, and a rule enforced by the
