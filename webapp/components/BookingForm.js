@@ -34,9 +34,18 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
     setB((prev) => {
       const next = { ...prev, [k]: v };
 
+      // Entering an actual deposit amount received is what really means
+      // "the deposit came in" - so that's what drives the auto-confirm,
+      // not just picking "Received" from the dropdown (though that still
+      // works too, for cases where the amount was already logged earlier).
+      if (k === 'deposit_amount_received' && parseFloat(v) > 0) {
+        next.deposit_status = 'Received';
+        next.booking_status = 'Confirmed';
+      }
+
       // Selecting Deposit Received directly confirms the booking too -
-      // the two should never be out of sync, since "sealed" (and
-      // therefore delete-proof) requires both to be true together.
+      // the two should never be out of sync, since a confirmed booking
+      // can never be deleted once saved.
       if (k === 'deposit_status' && v === 'Received') {
         next.booking_status = 'Confirmed';
       }
@@ -78,7 +87,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
 
         {sealed && (
           <div className="mx-6 mt-4 seal-banner border text-sm px-4 py-3 rounded-lg flex items-center gap-2">
-            <Lock size={15} /> This booking is confirmed with deposit received. Deletion is permanently blocked for everyone, including approvers.
+            <Lock size={15} /> This booking is Confirmed. Deletion is permanently blocked for everyone, including approvers.
           </div>
         )}
         {overriding && !sealed && (
@@ -120,7 +129,6 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
           </Field>
           <Field label="Grade Level / Age"><input className={inputCls} value={b.grade_level || ''} onChange={(e) => set('grade_level', e.target.value)} /></Field>
           <Field label="# Students"><input type="number" className={inputCls} value={b.number_of_students || ''} onChange={(e) => set('number_of_students', e.target.value)} /></Field>
-          <Field label="# Chaperones"><input type="number" className={inputCls} value={b.number_of_chaperones || ''} onChange={(e) => set('number_of_chaperones', e.target.value)} /></Field>
           <Field label="Package">
             <select className={inputCls} value={b.package_selected || ''} onChange={(e) => set('package_selected', e.target.value)}>
               {packageOptions.map((v) => <option key={v}>{v}</option>)}
@@ -130,7 +138,6 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
             )}
           </Field>
           <Field label="Total Price (AED)"><input type="number" className={inputCls} value={b.total_price || ''} onChange={(e) => set('total_price', e.target.value)} /></Field>
-          <Field label="Deposit Required (AED)"><input type="number" className={inputCls} value={b.deposit_required || ''} onChange={(e) => set('deposit_required', e.target.value)} disabled={depositLocked} /></Field>
           <Field label={<span className="flex items-center gap-1">Deposit Status {depositLocked && <Lock size={11} />}</span>}>
             <select className={inputCls} value={b.deposit_status} onChange={(e) => set('deposit_status', e.target.value)} disabled={depositLocked}>
               {DEPOSIT_STATUSES.map((v) => <option key={v}>{v}</option>)}
@@ -142,11 +149,6 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
           <Field label={<span className="flex items-center gap-1">Booking Status {statusLocked && <Lock size={11} />}</span>}>
             <select className={inputCls} value={b.booking_status} onChange={(e) => set('booking_status', e.target.value)} disabled={statusLocked}>
               {STATUS_ALL.map((v) => <option key={v}>{v}</option>)}
-            </select>
-          </Field>
-          <Field label="Consent Forms Received">
-            <select className={inputCls} value={b.consent_forms_received || 'No'} onChange={(e) => set('consent_forms_received', e.target.value)}>
-              <option>Yes</option><option>No</option>
             </select>
           </Field>
           <Field label="Team Assigned" span><input className={inputCls} value={b.team_assigned || ''} onChange={(e) => set('team_assigned', e.target.value)} /></Field>

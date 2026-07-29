@@ -68,7 +68,7 @@ export default function AppShell({ children }) {
             <LogOut size={13} /> Sign out
           </button>
           <div className="text-[11px] text-white/40 leading-relaxed mt-3 px-2">
-            Sealed bookings (Confirmed + Deposit Received) can&apos;t be deleted by anyone, enforced by the database itself.
+            Confirmed or Completed bookings can&apos;t be deleted by anyone, enforced by the database itself.
           </div>
         </div>
       </aside>

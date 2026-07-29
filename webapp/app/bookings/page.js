@@ -172,7 +172,7 @@ export default function BookingsPage() {
                               <button onClick={() => markCompleted(b)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">Mark Completed</button>
                             )}
                             {sealed ? (
-                              <span title="Confirmed with deposit received - permanent record" className="seal-badge"><Lock size={15} /></span>
+                              <span title="Confirmed - permanent record" className="seal-badge"><Lock size={15} /></span>
                             ) : (
                               <button title="Delete booking" onClick={() => setDeleteConfirm(b)} className="text-slate-300 hover:text-red-500"><X size={16} /></button>
                             )}
