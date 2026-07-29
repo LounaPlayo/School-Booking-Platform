@@ -44,3 +44,6 @@ export function balanceDue(b) {
 export function totalBalance(b) {
   return balanceDue(b) + (parseFloat(b.add_on_fee) || 0);
 }
+export function settledTotal(b) {
+  return (parseFloat(b.settled_cash) || 0) + (parseFloat(b.settled_wish) || 0) + (parseFloat(b.settled_bank) || 0);
+}

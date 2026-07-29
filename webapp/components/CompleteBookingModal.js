@@ -1,21 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { X, CheckCircle2 } from 'lucide-react';
-import { PAYMENT_METHODS, balanceDue, totalBalance } from '../lib/constants';
+import { CheckCircle2, AlertTriangle } from 'lucide-react';
+import { totalBalance } from '../lib/constants';
 
 export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
-  const [method, setMethod] = useState('');
+  const [cash, setCash] = useState('');
+  const [wish, setWish] = useState('');
+  const [bank, setBank] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const due = totalBalance(booking);
+  const settled = (parseFloat(cash) || 0) + (parseFloat(wish) || 0) + (parseFloat(bank) || 0);
+  const diff = Math.round((settled - due) * 100) / 100;
 
   async function handleConfirm() {
-    if (!method) { setError('Select how the balance was settled.'); return; }
-    setError('');
     setSaving(true);
-    await onConfirm({ balance_settled_method: method, balance_settled_date: date });
+    await onConfirm({
+      settled_cash: parseFloat(cash) || 0,
+      settled_wish: parseFloat(wish) || 0,
+      settled_bank: parseFloat(bank) || 0,
+      balance_settled_date: date,
+    });
     setSaving(false);
   }
 
@@ -27,20 +33,45 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
         </div>
         <h3 className="font-display font-bold text-slate-900 mb-1">Complete this booking</h3>
         <p className="text-sm text-slate-500 mb-4">
-          {booking.school_name || 'This booking'} — remaining balance{' '}
+          {booking.school_name || 'This booking'} — balance due{' '}
           <span className="font-semibold text-slate-700">AED {due.toFixed(2)}</span>
         </p>
 
-        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Settled by</label>
-        <select className="focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mb-3" value={method} onChange={(e) => setMethod(e.target.value)}>
-          <option value="">Select a method</option>
-          {PAYMENT_METHODS.map((m) => <option key={m}>{m}</option>)}
-        </select>
+        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">How was it settled?</label>
+        <div className="space-y-2 mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-600 w-14">Cash</span>
+            <input type="number" className="focus-ring flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg" value={cash} onChange={(e) => setCash(e.target.value)} placeholder="0" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-600 w-14">Wish</span>
+            <input type="number" className="focus-ring flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg" value={wish} onChange={(e) => setWish(e.target.value)} placeholder="0" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-600 w-14">Bank</span>
+            <input type="number" className="focus-ring flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg" value={bank} onChange={(e) => setBank(e.target.value)} placeholder="0" />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between text-sm mb-4 px-1">
+          <span className="text-slate-500">Total entered</span>
+          <span className="font-semibold text-slate-800">AED {settled.toFixed(2)}</span>
+        </div>
+
+        {diff !== 0 && (
+          <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+            <span>
+              {diff > 0
+                ? `This is AED ${diff.toFixed(2)} more than the balance due.`
+                : `This is AED ${Math.abs(diff).toFixed(2)} short of the balance due.`}
+              {' '}You can still save this if it's correct (e.g. a discount or rounding).
+            </span>
+          </div>
+        )}
 
         <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Settlement date</label>
-        <input type="date" className="focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mb-4" value={date} onChange={(e) => setDate(e.target.value)} />
-
-        {error && <div className="text-sm text-red-600 mb-3">{error}</div>}
+        <input type="date" className="focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mb-5" value={date} onChange={(e) => setDate(e.target.value)} />
 
         <div className="flex justify-end gap-2">
           <button onClick={onCancel} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800">Cancel</button>

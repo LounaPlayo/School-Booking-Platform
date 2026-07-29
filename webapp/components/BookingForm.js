@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { X, Lock, ShieldCheck } from 'lucide-react';
 import {
   VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES, PAYMENT_METHODS, ADD_ON_FOOD_OPTIONS,
-  isStatusLocked, isDepositLocked, isSealed, balanceDue, totalBalance,
+  isStatusLocked, isDepositLocked, isSealed, balanceDue, totalBalance, settledTotal,
 } from '../lib/constants';
 
 const inputCls = 'focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50 disabled:text-slate-400';
@@ -212,15 +212,12 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
 
           {(b.booking_status === 'Completed' || existing) && (
             <Section title="Completion &amp; Settlement" tint="#F0FBF3">
-              <Field label="Balance Settled By">
-                <select className={inputCls} value={b.balance_settled_method || ''} onChange={(e) => set('balance_settled_method', e.target.value)} disabled={formLocked}>
-                  <option value="">Not settled yet</option>
-                  {PAYMENT_METHODS.map((v) => <option key={v}>{v}</option>)}
-                </select>
-              </Field>
+              <Field label="Settled - Cash (AED)"><input type="number" className={inputCls} value={b.settled_cash || ''} onChange={(e) => set('settled_cash', e.target.value)} disabled={formLocked} /></Field>
+              <Field label="Settled - Wish (AED)"><input type="number" className={inputCls} value={b.settled_wish || ''} onChange={(e) => set('settled_wish', e.target.value)} disabled={formLocked} /></Field>
+              <Field label="Settled - Bank (AED)"><input type="number" className={inputCls} value={b.settled_bank || ''} onChange={(e) => set('settled_bank', e.target.value)} disabled={formLocked} /></Field>
               <Field label="Settlement Date"><input type="date" className={inputCls} value={b.balance_settled_date || ''} onChange={(e) => set('balance_settled_date', e.target.value)} disabled={formLocked} /></Field>
               <p className="text-[11px] text-slate-400 col-span-2 -mt-2">
-                Normally set automatically via the &quot;Mark Completed&quot; button on the bookings list - shown here for review or correction.
+                Total settled: AED {settledTotal(b).toFixed(2)} · Normally set via the &quot;Mark Completed&quot; button on the bookings list - shown here for review or correction.
               </p>
             </Section>
           )}
