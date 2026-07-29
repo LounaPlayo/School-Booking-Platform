@@ -210,6 +210,21 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
             <Field label="Team Assigned" span><input className={inputCls} value={b.team_assigned || ''} onChange={(e) => set('team_assigned', e.target.value)} disabled={formLocked} /></Field>
           </Section>
 
+          {(b.booking_status === 'Completed' || existing) && (
+            <Section title="Completion &amp; Settlement" tint="#F0FBF3">
+              <Field label="Balance Settled By">
+                <select className={inputCls} value={b.balance_settled_method || ''} onChange={(e) => set('balance_settled_method', e.target.value)} disabled={formLocked}>
+                  <option value="">Not settled yet</option>
+                  {PAYMENT_METHODS.map((v) => <option key={v}>{v}</option>)}
+                </select>
+              </Field>
+              <Field label="Settlement Date"><input type="date" className={inputCls} value={b.balance_settled_date || ''} onChange={(e) => set('balance_settled_date', e.target.value)} disabled={formLocked} /></Field>
+              <p className="text-[11px] text-slate-400 col-span-2 -mt-2">
+                Normally set automatically via the &quot;Mark Completed&quot; button on the bookings list - shown here for review or correction.
+              </p>
+            </Section>
+          )}
+
           <Section title="Notes">
             <Field label="Special Requests / Notes" span><textarea className={inputCls} rows={2} value={b.notes || ''} onChange={(e) => set('notes', e.target.value)} disabled={formLocked} /></Field>
           </Section>

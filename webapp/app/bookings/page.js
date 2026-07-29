@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, X, Lock, Search } from 'lucide-react';
 import AppShell from '../../components/AppShell';
 import BookingForm from '../../components/BookingForm';
+import CompleteBookingModal from '../../components/CompleteBookingModal';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import StatusPill from '../../components/StatusPill';
 import { useAuth } from '../../lib/AuthProvider';
@@ -58,7 +59,7 @@ export default function BookingsPage() {
   // actual number or null. This converts any blank numeric field before
   // it's sent, so a removed/skipped field can never cause a save error.
   const NUMERIC_FIELDS = ['number_of_students', 'total_price', 'deposit_amount_received', 'add_on_fee'];
-  const DATE_FIELDS = ['event_date', 'deposit_date', 'follow_up_date'];
+  const DATE_FIELDS = ['event_date', 'deposit_date', 'follow_up_date', 'balance_settled_date'];
   function sanitize(b) {
     const out = { ...b };
     NUMERIC_FIELDS.forEach((k) => { if (out[k] === '' || out[k] === undefined) out[k] = null; });
@@ -106,10 +107,21 @@ export default function BookingsPage() {
     loadAll();
   }
 
-  async function markCompleted(b) {
+  const [completeTarget, setCompleteTarget] = useState(null);
+
+  async function confirmCompletion({ balance_settled_method, balance_settled_date }) {
     setErrorMsg('');
-    const { error } = await supabase.from('bookings').update({ booking_status: 'Completed', updated_by: profile.id }).eq('id', b.id);
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        booking_status: 'Completed',
+        balance_settled_method,
+        balance_settled_date,
+        updated_by: profile.id,
+      })
+      .eq('id', completeTarget.id);
     if (error) setErrorMsg(error.message);
+    setCompleteTarget(null);
     loadAll();
   }
 
@@ -182,8 +194,8 @@ export default function BookingsPage() {
                         <td className="px-5 py-3.5 text-slate-600">{b.deposit_status}</td>
                         <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-3 justify-end">
-                            {b.booking_status === 'Confirmed' && (
-                              <button onClick={() => markCompleted(b)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">Mark Completed</button>
+                            {b.booking_status === 'Confirmed' && profile.role === 'approver' && (
+                              <button onClick={() => setCompleteTarget(b)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">Mark Completed</button>
                             )}
                             {sealed ? (
                               <span title="Confirmed - permanent record" className="seal-badge"><Lock size={15} /></span>
@@ -216,6 +228,9 @@ export default function BookingsPage() {
       )}
       {deleteConfirm && (
         <DeleteConfirmModal booking={deleteConfirm} onCancel={() => setDeleteConfirm(null)} onConfirm={() => deleteBooking(deleteConfirm)} />
+      )}
+      {completeTarget && (
+        <CompleteBookingModal booking={completeTarget} onCancel={() => setCompleteTarget(null)} onConfirm={confirmCompletion} />
       )}
     </AppShell>
   );
