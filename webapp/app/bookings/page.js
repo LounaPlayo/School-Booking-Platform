@@ -45,19 +45,32 @@ export default function BookingsPage() {
     return {
       venue: 'Playo', school_name: '', contact_person: '', phone: '', email: '',
       event_date: '', event_time: '', event_type: 'School Trip / Field Visit',
-      grade_level: '', number_of_students: '', number_of_chaperones: '',
+      grade_level: '', number_of_students: '',
       package_selected: 'Package A', total_price: '',
-      deposit_required: '', deposit_status: 'Not Requested', deposit_amount_received: '', deposit_date: '',
-      booking_status: 'Tentative', team_assigned: '', consent_forms_received: 'No',
+      deposit_status: 'Not Requested', deposit_amount_received: '', deposit_date: '',
+      booking_status: 'Tentative', team_assigned: '',
       notes: '', follow_up_date: '',
     };
+  }
+
+  // Postgres numeric columns reject "" (empty string) - they need an
+  // actual number or null. This converts any blank numeric field before
+  // it's sent, so a removed/skipped field can never cause a save error.
+  const NUMERIC_FIELDS = ['number_of_students', 'total_price', 'deposit_amount_received'];
+  const DATE_FIELDS = ['event_date', 'deposit_date', 'follow_up_date'];
+  function sanitize(b) {
+    const out = { ...b };
+    NUMERIC_FIELDS.forEach((k) => { if (out[k] === '' || out[k] === undefined) out[k] = null; });
+    DATE_FIELDS.forEach((k) => { if (out[k] === '' || out[k] === undefined) out[k] = null; });
+    return out;
   }
 
   function openNew() { setEditing(emptyBooking()); setShowForm(true); }
   function openEdit(b) { setEditing({ ...b }); setShowForm(true); }
 
-  async function saveBooking(b) {
+  async function saveBooking(rawB) {
     setErrorMsg('');
+    const b = sanitize(rawB);
     const wasLockedBefore = b.id ? bookings.find((x) => x.id === b.id) : null;
     const payload = { ...b, updated_by: profile.id };
     if (b.booking_status === 'Confirmed' || b.booking_status === 'Completed') {

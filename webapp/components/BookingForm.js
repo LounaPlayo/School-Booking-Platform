@@ -18,6 +18,15 @@ function Field({ label, children, span }) {
   );
 }
 
+function Section({ title, tint, children }) {
+  return (
+    <div className="rounded-xl border border-slate-200 p-4" style={tint ? { background: tint } : undefined}>
+      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{title}</h4>
+      <div className="grid grid-cols-2 gap-4">{children}</div>
+    </div>
+  );
+}
+
 export default function BookingForm({ booking, existing, profile, packageRates, onCancel, onSave, onDeleteRequest, namesById }) {
   const [b, setB] = useState(booking);
   const [error, setError] = useState('');
@@ -29,6 +38,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
   const sealed = existing && isSealed(booking);
   const rateMap = Object.fromEntries((packageRates || []).map((r) => [r.package_name, r.rate]));
   const packageOptions = [...(packageRates || []).map((r) => r.package_name), 'Special Offer'];
+  const isSpecialOffer = b.package_selected === 'Special Offer';
 
   function set(k, v) {
     setB((prev) => {
@@ -50,9 +60,10 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
         next.booking_status = 'Confirmed';
       }
 
-      // Packages with a set rate auto-price against the student count.
-      // Special Offer has no fixed rate - it's left for manual entry and
-      // should be confirmed with an approver before the booking is finalized.
+      // Packages with a set rate auto-price against the student count,
+      // and Total Price is locked (read-only) for these - see the field
+      // below. Special Offer has no fixed rate and stays manually
+      // editable, confirmed with an approver before finalizing.
       if (k === 'package_selected' && rateMap[v] !== undefined) {
         const students = parseFloat(next.number_of_students) || 0;
         next.total_price = (rateMap[v] * students).toString();
@@ -77,8 +88,8 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
 
   return (
     <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4" onClick={onCancel}>
-      <div className="bg-white rounded-2xl w-full max-w-2xl overflow-y-auto" style={{ maxHeight: '90vh' }} onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <div className="bg-white rounded-2xl w-full max-w-2xl overflow-y-auto" style={{ maxHeight: '92vh' }} onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
           <div>
             <h2 className="font-display text-lg font-bold text-slate-900">{existing ? 'Edit Booking' : 'New Booking'}</h2>
           </div>
@@ -103,57 +114,83 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
           </div>
         )}
 
-        <div className="p-6 grid grid-cols-2 gap-4">
-          <Field label="Venue">
-            <select className={inputCls} value={b.venue} onChange={(e) => set('venue', e.target.value)}>
-              {VENUES.map((v) => <option key={v}>{v}</option>)}
-            </select>
-          </Field>
-          <Field label="Event Type">
-            <select className={inputCls} value={b.event_type || ''} onChange={(e) => set('event_type', e.target.value)}>
-              {EVENT_TYPES.map((v) => <option key={v}>{v}</option>)}
-            </select>
-          </Field>
-          <Field label="School / Nursery Name" span>
-            <input className={inputCls} value={b.school_name || ''} onChange={(e) => set('school_name', e.target.value)} placeholder="e.g. Kids World Nursery" />
-          </Field>
-          <Field label="Contact Person"><input className={inputCls} value={b.contact_person || ''} onChange={(e) => set('contact_person', e.target.value)} /></Field>
-          <Field label="Phone"><input className={inputCls} value={b.phone || ''} onChange={(e) => set('phone', e.target.value)} /></Field>
-          <Field label="Email" span><input className={inputCls} value={b.email || ''} onChange={(e) => set('email', e.target.value)} /></Field>
-          <Field label="Event Date"><input type="date" className={inputCls} value={b.event_date || ''} onChange={(e) => set('event_date', e.target.value)} /></Field>
-          <Field label="Event Time">
-            <select className={inputCls} value={b.event_time || ''} onChange={(e) => set('event_time', e.target.value)}>
-              <option value="">Select a time</option>
-              {EVENT_TIMES.map((v) => <option key={v}>{v}</option>)}
-            </select>
-          </Field>
-          <Field label="Grade Level / Age"><input className={inputCls} value={b.grade_level || ''} onChange={(e) => set('grade_level', e.target.value)} /></Field>
-          <Field label="# Students"><input type="number" className={inputCls} value={b.number_of_students || ''} onChange={(e) => set('number_of_students', e.target.value)} /></Field>
-          <Field label="Package">
-            <select className={inputCls} value={b.package_selected || ''} onChange={(e) => set('package_selected', e.target.value)}>
-              {packageOptions.map((v) => <option key={v}>{v}</option>)}
-            </select>
-            {b.package_selected === 'Special Offer' && (
-              <p className="text-[11px] text-amber-700 mt-1">Special pricing - enter manually and confirm with an approver before finalizing.</p>
-            )}
-          </Field>
-          <Field label="Total Price (AED)"><input type="number" className={inputCls} value={b.total_price || ''} onChange={(e) => set('total_price', e.target.value)} /></Field>
-          <Field label={<span className="flex items-center gap-1">Deposit Status {depositLocked && <Lock size={11} />}</span>}>
-            <select className={inputCls} value={b.deposit_status} onChange={(e) => set('deposit_status', e.target.value)} disabled={depositLocked}>
-              {DEPOSIT_STATUSES.map((v) => <option key={v}>{v}</option>)}
-            </select>
-          </Field>
-          <Field label="Deposit Amount Received"><input type="number" className={inputCls} value={b.deposit_amount_received || ''} onChange={(e) => set('deposit_amount_received', e.target.value)} disabled={depositLocked} /></Field>
-          <Field label="Deposit Date"><input type="date" className={inputCls} value={b.deposit_date || ''} onChange={(e) => set('deposit_date', e.target.value)} disabled={depositLocked} /></Field>
-          <Field label="Balance Due (AED)"><input className={inputCls} value={balanceDue(b).toFixed(2)} disabled /></Field>
-          <Field label={<span className="flex items-center gap-1">Booking Status {statusLocked && <Lock size={11} />}</span>}>
-            <select className={inputCls} value={b.booking_status} onChange={(e) => set('booking_status', e.target.value)} disabled={statusLocked}>
-              {STATUS_ALL.map((v) => <option key={v}>{v}</option>)}
-            </select>
-          </Field>
-          <Field label="Team Assigned" span><input className={inputCls} value={b.team_assigned || ''} onChange={(e) => set('team_assigned', e.target.value)} /></Field>
-          <Field label="Follow-up Date"><input type="date" className={inputCls} value={b.follow_up_date || ''} onChange={(e) => set('follow_up_date', e.target.value)} /></Field>
-          <Field label="Notes" span><textarea className={inputCls} rows={2} value={b.notes || ''} onChange={(e) => set('notes', e.target.value)} /></Field>
+        <div className="p-6 space-y-4">
+          <Section title="School &amp; Contact">
+            <Field label="Venue">
+              <select className={inputCls} value={b.venue} onChange={(e) => set('venue', e.target.value)}>
+                {VENUES.map((v) => <option key={v}>{v}</option>)}
+              </select>
+            </Field>
+            <Field label="Event Type">
+              <select className={inputCls} value={b.event_type || ''} onChange={(e) => set('event_type', e.target.value)}>
+                {EVENT_TYPES.map((v) => <option key={v}>{v}</option>)}
+              </select>
+            </Field>
+            <Field label="School / Nursery Name" span>
+              <input className={inputCls} value={b.school_name || ''} onChange={(e) => set('school_name', e.target.value)} placeholder="e.g. Kids World Nursery" />
+            </Field>
+            <Field label="Contact Person"><input className={inputCls} value={b.contact_person || ''} onChange={(e) => set('contact_person', e.target.value)} /></Field>
+            <Field label="Phone"><input className={inputCls} value={b.phone || ''} onChange={(e) => set('phone', e.target.value)} /></Field>
+            <Field label="Email" span><input className={inputCls} value={b.email || ''} onChange={(e) => set('email', e.target.value)} /></Field>
+          </Section>
+
+          <Section title="Event Details">
+            <Field label="Event Date"><input type="date" className={inputCls} value={b.event_date || ''} onChange={(e) => set('event_date', e.target.value)} /></Field>
+            <Field label="Event Time">
+              <select className={inputCls} value={b.event_time || ''} onChange={(e) => set('event_time', e.target.value)}>
+                <option value="">Select a time</option>
+                {EVENT_TIMES.map((v) => <option key={v}>{v}</option>)}
+              </select>
+            </Field>
+            <Field label="Grade Level / Age"><input className={inputCls} value={b.grade_level || ''} onChange={(e) => set('grade_level', e.target.value)} /></Field>
+            <Field label="# Students"><input type="number" className={inputCls} value={b.number_of_students || ''} onChange={(e) => set('number_of_students', e.target.value)} /></Field>
+          </Section>
+
+          <Section title="Package &amp; Pricing">
+            <Field label="Package">
+              <select className={inputCls} value={b.package_selected || ''} onChange={(e) => set('package_selected', e.target.value)}>
+                {packageOptions.map((v) => <option key={v}>{v}</option>)}
+              </select>
+              {isSpecialOffer && (
+                <p className="text-[11px] text-amber-700 mt-1">Special pricing - enter manually and confirm with an approver before finalizing.</p>
+              )}
+            </Field>
+            <Field label="Total Price (AED)">
+              <input
+                type="number"
+                className={inputCls}
+                value={b.total_price || ''}
+                onChange={(e) => set('total_price', e.target.value)}
+                disabled={!isSpecialOffer}
+              />
+              {!isSpecialOffer && <p className="text-[11px] text-slate-400 mt-1">Auto-calculated from package rate × students.</p>}
+            </Field>
+          </Section>
+
+          <Section title="Deposit &amp; Payment" tint="#F8FAFC">
+            <Field label={<span className="flex items-center gap-1">Deposit Status {depositLocked && <Lock size={11} />}</span>}>
+              <select className={inputCls} value={b.deposit_status} onChange={(e) => set('deposit_status', e.target.value)} disabled={depositLocked}>
+                {DEPOSIT_STATUSES.map((v) => <option key={v}>{v}</option>)}
+              </select>
+            </Field>
+            <Field label="Deposit Amount Received"><input type="number" className={inputCls} value={b.deposit_amount_received || ''} onChange={(e) => set('deposit_amount_received', e.target.value)} disabled={depositLocked} /></Field>
+            <Field label="Deposit Date"><input type="date" className={inputCls} value={b.deposit_date || ''} onChange={(e) => set('deposit_date', e.target.value)} disabled={depositLocked} /></Field>
+            <Field label="Balance Due (AED)"><input className={inputCls} value={balanceDue(b).toFixed(2)} disabled /></Field>
+          </Section>
+
+          <Section title="Status &amp; Assignment">
+            <Field label={<span className="flex items-center gap-1">Booking Status {statusLocked && <Lock size={11} />}</span>}>
+              <select className={inputCls} value={b.booking_status} onChange={(e) => set('booking_status', e.target.value)} disabled={statusLocked}>
+                {STATUS_ALL.map((v) => <option key={v}>{v}</option>)}
+              </select>
+            </Field>
+            <Field label="Follow-up Date"><input type="date" className={inputCls} value={b.follow_up_date || ''} onChange={(e) => set('follow_up_date', e.target.value)} /></Field>
+            <Field label="Team Assigned" span><input className={inputCls} value={b.team_assigned || ''} onChange={(e) => set('team_assigned', e.target.value)} /></Field>
+          </Section>
+
+          <Section title="Notes">
+            <Field label="Special Requests / Notes" span><textarea className={inputCls} rows={2} value={b.notes || ''} onChange={(e) => set('notes', e.target.value)} /></Field>
+          </Section>
         </div>
 
         {error && <div className="mx-6 mb-2 text-sm text-red-600">{error}</div>}
