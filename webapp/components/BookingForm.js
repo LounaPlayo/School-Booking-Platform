@@ -27,6 +27,39 @@ function Section({ title, tint, children }) {
   );
 }
 
+function PaymentSummary({ b }) {
+  const total = parseFloat(b.total_price) || 0;
+  const addOn = parseFloat(b.add_on_fee) || 0;
+  const deposit = parseFloat(b.deposit_amount_received) || 0;
+  const cash = parseFloat(b.settled_cash) || 0;
+  const wish = parseFloat(b.settled_wish) || 0;
+  const bank = parseFloat(b.settled_bank) || 0;
+  const grandTotal = total + addOn;
+  const remaining = grandTotal - deposit - cash - wish - bank;
+
+  const Row = ({ label, value, bold }) => (
+    <div className={`flex items-center justify-between py-1.5 ${bold ? 'font-semibold text-slate-900' : 'text-slate-600'}`}>
+      <span className="text-sm">{label}</span>
+      <span className="text-sm font-mono">AED {value.toFixed(2)}</span>
+    </div>
+  );
+
+  return (
+    <div className="mx-6 mt-4 rounded-xl border border-slate-200 p-4" style={{ background: '#FAFBFC' }}>
+      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Payment Summary</h4>
+      <Row label="Total Price" value={total} />
+      {addOn > 0 && <Row label="+ Add-On Fee" value={addOn} />}
+      <div className="border-t border-slate-200 my-1" />
+      {deposit > 0 && <Row label="− Deposit Received" value={deposit} />}
+      {cash > 0 && <Row label="− Settled (Cash)" value={cash} />}
+      {wish > 0 && <Row label="− Settled (Wish)" value={wish} />}
+      {bank > 0 && <Row label="− Settled (Bank)" value={bank} />}
+      <div className="border-t border-slate-300 my-1" />
+      <Row label={remaining <= 0 ? 'Fully Settled' : 'Remaining Balance'} value={Math.max(remaining, 0)} bold />
+    </div>
+  );
+}
+
 export default function BookingForm({ booking, existing, profile, packageRates, onCancel, onSave, onDeleteRequest, namesById }) {
   const [b, setB] = useState(booking);
   const [error, setError] = useState('');
@@ -117,6 +150,8 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
             {b.approved_by && <span>Confirmed by {namesById[b.approved_by] || 'Unknown'}</span>}
           </div>
         )}
+
+        {existing && <PaymentSummary b={b} />}
 
         <div className="p-6 space-y-4">
           <Section title="School &amp; Contact">

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { School, Clock, CheckCircle2, Users, AlertCircle, ChevronRight } from 'lucide-react';
+import { School, Clock, CheckCircle2, Users, AlertCircle, ChevronRight, Wallet, Banknote, Smartphone, Landmark } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import AppShell from '../../components/AppShell';
 import { useAuth } from '../../lib/AuthProvider';
@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [venueFilter, setVenueFilter] = useState('Both');
+  const [cashFlowMonth, setCashFlowMonth] = useState(new Date().toISOString().slice(0, 7)); // "YYYY-MM"
 
   useEffect(() => {
     if (!profile) return;
@@ -66,6 +67,19 @@ export default function DashboardPage() {
     .filter((b) => (b.booking_status === 'Tentative' || b.booking_status === 'Deposit Pending') && b.follow_up_date && b.follow_up_date <= today)
     .sort((a, b) => a.follow_up_date.localeCompare(b.follow_up_date))
     .slice(0, 6);
+
+  const cashFlow = useMemo(() => {
+    const monthBookings = scoped.filter((b) => b.balance_settled_date && b.balance_settled_date.slice(0, 7) === cashFlowMonth);
+    const cash = monthBookings.reduce((sum, b) => sum + (parseFloat(b.settled_cash) || 0), 0);
+    const wish = monthBookings.reduce((sum, b) => sum + (parseFloat(b.settled_wish) || 0), 0);
+    const bank = monthBookings.reduce((sum, b) => sum + (parseFloat(b.settled_bank) || 0), 0);
+    return { cash, wish, bank, total: cash + wish + bank, count: monthBookings.length };
+  }, [scoped, cashFlowMonth]);
+  const cashFlowChartData = [
+    { method: 'Cash', amount: cashFlow.cash },
+    { method: 'Wish', amount: cashFlow.wish },
+    { method: 'Bank', amount: cashFlow.bank },
+  ];
 
   return (
     <AppShell>
@@ -130,6 +144,52 @@ export default function DashboardPage() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <Wallet size={16} className="text-slate-500" />
+                  <h3 className="font-display font-semibold text-slate-900">Cash Flow</h3>
+                </div>
+                <input
+                  type="month"
+                  value={cashFlowMonth}
+                  onChange={(e) => setCashFlowMonth(e.target.value)}
+                  className="focus-ring text-sm border border-slate-200 rounded-lg px-3 py-1.5"
+                />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+                <div className="rounded-lg border border-slate-100 p-4">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1"><Banknote size={13} /> Cash</div>
+                  <div className="font-display text-xl font-bold text-slate-900">AED {cashFlow.cash.toFixed(2)}</div>
+                </div>
+                <div className="rounded-lg border border-slate-100 p-4">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1"><Smartphone size={13} /> Wish</div>
+                  <div className="font-display text-xl font-bold text-slate-900">AED {cashFlow.wish.toFixed(2)}</div>
+                </div>
+                <div className="rounded-lg border border-slate-100 p-4">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1"><Landmark size={13} /> Bank</div>
+                  <div className="font-display text-xl font-bold text-slate-900">AED {cashFlow.bank.toFixed(2)}</div>
+                </div>
+                <div className="rounded-lg p-4" style={{ background: '#F0FBF3' }}>
+                  <div className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">Total settled</div>
+                  <div className="font-display text-xl font-bold text-emerald-800">AED {cashFlow.total.toFixed(2)}</div>
+                </div>
+              </div>
+              {cashFlow.total === 0 ? (
+                <div className="text-sm text-slate-400 py-6 text-center">No settlements recorded for this month yet.</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart data={cashFlowChartData} layout="vertical" margin={{ left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 12 }} />
+                    <YAxis type="category" dataKey="method" tick={{ fontSize: 12 }} width={50} />
+                    <Tooltip formatter={(v) => `AED ${v.toFixed(2)}`} />
+                    <Bar dataKey="amount" fill="#22B2F0" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 p-6">

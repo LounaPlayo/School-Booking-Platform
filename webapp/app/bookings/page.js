@@ -180,6 +180,9 @@ export default function BookingsPage() {
                     <th className="px-5 py-3 font-semibold">Event Date</th>
                     <th className="px-5 py-3 font-semibold">Status</th>
                     <th className="px-5 py-3 font-semibold">Deposit</th>
+                    <th className="px-5 py-3 font-semibold text-right">Cash</th>
+                    <th className="px-5 py-3 font-semibold text-right">Wish</th>
+                    <th className="px-5 py-3 font-semibold text-right">Bank</th>
                     <th className="px-5 py-3 font-semibold"></th>
                   </tr>
                 </thead>
@@ -195,6 +198,9 @@ export default function BookingsPage() {
                         <td className="px-5 py-3.5 text-slate-600">{b.event_date || '—'}</td>
                         <td className="px-5 py-3.5"><StatusPill status={b.booking_status} /></td>
                         <td className="px-5 py-3.5 text-slate-600">{b.deposit_status}</td>
+                        <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{b.settled_cash ? Number(b.settled_cash).toFixed(2) : '—'}</td>
+                        <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{b.settled_wish ? Number(b.settled_wish).toFixed(2) : '—'}</td>
+                        <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{b.settled_bank ? Number(b.settled_bank).toFixed(2) : '—'}</td>
                         <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-3 justify-end">
                             {b.booking_status === 'Confirmed' && profile.role === 'approver' && (
