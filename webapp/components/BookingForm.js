@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { X, Lock, ShieldCheck } from 'lucide-react';
 import {
   VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES, PAYMENT_METHODS, ADD_ON_FOOD_OPTIONS,
-  isStatusLocked, isDepositLocked, isSealed, balanceDue, totalBalance, settledTotal,
+  isStatusLocked, isDepositLocked, isSealed, balanceDue, totalBalance,
 } from '../lib/constants';
 
 const inputCls = 'focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50 disabled:text-slate-400';
@@ -35,27 +35,28 @@ function PaymentSummary({ b }) {
   const wish = parseFloat(b.settled_wish) || 0;
   const bank = parseFloat(b.settled_bank) || 0;
   const grandTotal = total + addOn;
-  const remaining = grandTotal - deposit - cash - wish - bank;
+  const remaining = Math.max(grandTotal - deposit - cash - wish - bank, 0);
 
-  const Row = ({ label, value, bold }) => (
-    <div className={`flex items-center justify-between py-1.5 ${bold ? 'font-semibold text-slate-900' : 'text-slate-600'}`}>
-      <span className="text-sm">{label}</span>
-      <span className="text-sm font-mono">AED {value.toFixed(2)}</span>
-    </div>
-  );
+  const parts = [{ label: 'Total', value: grandTotal }];
+  if (deposit > 0) parts.push({ label: 'Deposit', value: deposit, minus: true });
+  if (cash > 0) parts.push({ label: 'Cash', value: cash, minus: true });
+  if (wish > 0) parts.push({ label: 'Wish', value: wish, minus: true });
+  if (bank > 0) parts.push({ label: 'Bank', value: bank, minus: true });
 
   return (
-    <div className="mx-6 mt-4 rounded-xl border border-slate-200 p-4" style={{ background: '#FAFBFC' }}>
-      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Payment Summary</h4>
-      <Row label="Total Price" value={total} />
-      {addOn > 0 && <Row label="+ Add-On Fee" value={addOn} />}
-      <div className="border-t border-slate-200 my-1" />
-      {deposit > 0 && <Row label="− Deposit Received" value={deposit} />}
-      {cash > 0 && <Row label="− Settled (Cash)" value={cash} />}
-      {wish > 0 && <Row label="− Settled (Wish)" value={wish} />}
-      {bank > 0 && <Row label="− Settled (Bank)" value={bank} />}
-      <div className="border-t border-slate-300 my-1" />
-      <Row label={remaining <= 0 ? 'Fully Settled' : 'Remaining Balance'} value={Math.max(remaining, 0)} bold />
+    <div className="rounded-lg border border-emerald-200 px-3 py-2 mt-2" style={{ background: '#F0FBF3' }}>
+      <div className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-sm">
+        {parts.map((p, i) => (
+          <span key={i} className="font-mono text-slate-700">
+            {i > 0 && <span className="text-slate-400 mr-1.5">{p.minus ? '−' : ''}</span>}
+            {p.label} {p.value.toFixed(2)}
+          </span>
+        ))}
+        <span className="text-slate-400 mx-0.5">=</span>
+        <span className="font-mono font-bold text-emerald-800">
+          {remaining <= 0 ? 'Settled' : `Balance ${remaining.toFixed(2)}`}
+        </span>
+      </div>
     </div>
   );
 }
@@ -150,8 +151,6 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
             {b.approved_by && <span>Confirmed by {namesById[b.approved_by] || 'Unknown'}</span>}
           </div>
         )}
-
-        {existing && <PaymentSummary b={b} />}
 
         <div className="p-6 space-y-4">
           <Section title="School &amp; Contact">
@@ -251,9 +250,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
               <Field label="Settled - Wish (AED)"><input type="number" className={inputCls} value={b.settled_wish || ''} onChange={(e) => set('settled_wish', e.target.value)} disabled={formLocked} /></Field>
               <Field label="Settled - Bank (AED)"><input type="number" className={inputCls} value={b.settled_bank || ''} onChange={(e) => set('settled_bank', e.target.value)} disabled={formLocked} /></Field>
               <Field label="Settlement Date"><input type="date" className={inputCls} value={b.balance_settled_date || ''} onChange={(e) => set('balance_settled_date', e.target.value)} disabled={formLocked} /></Field>
-              <p className="text-[11px] text-slate-400 col-span-2 -mt-2">
-                Total settled: AED {settledTotal(b).toFixed(2)} · Normally set via the &quot;Mark Completed&quot; button on the bookings list - shown here for review or correction.
-              </p>
+              <div className="col-span-2"><PaymentSummary b={b} /></div>
             </Section>
           )}
 
