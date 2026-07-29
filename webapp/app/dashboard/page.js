@@ -9,12 +9,14 @@ import { useAuth } from '../../lib/AuthProvider';
 import { supabase } from '../../lib/supabaseClient';
 import { STATUS_COLORS, VENUES } from '../../lib/constants';
 
-function StatCard({ label, value, icon: Icon, accent }) {
+function StatCard({ label, value, icon: Icon, chip }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5">
-      <div className="flex items-center justify-between mb-2">
+    <div className="bg-white rounded-2xl border border-slate-200 p-5">
+      <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</span>
-        <Icon size={16} style={{ color: accent }} />
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center chip-${chip}`}>
+          <Icon size={15} />
+        </div>
       </div>
       <div className="font-display text-2xl font-bold text-slate-900">{value}</div>
     </div>
@@ -69,11 +71,23 @@ export default function DashboardPage() {
     .slice(0, 6);
 
   const cashFlow = useMemo(() => {
-    const monthBookings = scoped.filter((b) => b.balance_settled_date && b.balance_settled_date.slice(0, 7) === cashFlowMonth);
-    const cash = monthBookings.reduce((sum, b) => sum + (parseFloat(b.settled_cash) || 0), 0);
-    const wish = monthBookings.reduce((sum, b) => sum + (parseFloat(b.settled_wish) || 0), 0);
-    const bank = monthBookings.reduce((sum, b) => sum + (parseFloat(b.settled_bank) || 0), 0);
-    return { cash, wish, bank, total: cash + wish + bank, count: monthBookings.length };
+    let cash = 0, wish = 0, bank = 0;
+    scoped.forEach((b) => {
+      // Deposit money-in, attributed to the month it was actually received
+      if (b.deposit_date && b.deposit_date.slice(0, 7) === cashFlowMonth) {
+        const amt = parseFloat(b.deposit_amount_received) || 0;
+        if (b.payment_method === 'Cash') cash += amt;
+        else if (b.payment_method === 'Wish') wish += amt;
+        else if (b.payment_method === 'Bank') bank += amt;
+      }
+      // Final settlement money-in, attributed to its own settlement month
+      if (b.balance_settled_date && b.balance_settled_date.slice(0, 7) === cashFlowMonth) {
+        cash += parseFloat(b.settled_cash) || 0;
+        wish += parseFloat(b.settled_wish) || 0;
+        bank += parseFloat(b.settled_bank) || 0;
+      }
+    });
+    return { cash, wish, bank, total: cash + wish + bank };
   }, [scoped, cashFlowMonth]);
   const cashFlowChartData = [
     { method: 'Cash', amount: cashFlow.cash },
@@ -108,11 +122,11 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <StatCard label="Total Bookings" value={stats.total} icon={School} accent="#14213D" />
-              <StatCard label="Tentative" value={stats.s['Tentative'] || 0} icon={Clock} accent="#F59E0B" />
-              <StatCard label="Confirmed" value={stats.s['Confirmed'] || 0} icon={CheckCircle2} accent="#3B82F6" />
-              <StatCard label="Students Booked" value={stats.students} icon={Users} accent="#10B981" />
-              <StatCard label="Follow-ups Due" value={stats.pendingFollowUps} icon={AlertCircle} accent="#EF4444" />
+              <StatCard label="Total Bookings" value={stats.total} icon={School} chip="indigo" />
+              <StatCard label="Tentative" value={stats.s['Tentative'] || 0} icon={Clock} chip="amber" />
+              <StatCard label="Confirmed" value={stats.s['Confirmed'] || 0} icon={CheckCircle2} chip="sky" />
+              <StatCard label="Students Booked" value={stats.students} icon={Users} chip="emerald" />
+              <StatCard label="Follow-ups Due" value={stats.pendingFollowUps} icon={AlertCircle} chip="rose" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -139,8 +153,8 @@ export default function DashboardPage() {
                     <XAxis dataKey="venue" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                     <Tooltip />
-                    <Bar dataKey="Tentative" fill="#F59E0B" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Confirmed" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Tentative" fill="#FFC933" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Confirmed" fill="#6D28D9" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -160,21 +174,21 @@ export default function DashboardPage() {
                 />
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-                <div className="rounded-lg border border-slate-100 p-4">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1"><Banknote size={13} /> Cash</div>
-                  <div className="font-display text-xl font-bold text-slate-900">AED {cashFlow.cash.toFixed(2)}</div>
+                <div className="rounded-xl p-4 chip-emerald">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-1 opacity-80"><Banknote size={13} /> Cash</div>
+                  <div className="font-display text-xl font-bold">AED {cashFlow.cash.toFixed(2)}</div>
                 </div>
-                <div className="rounded-lg border border-slate-100 p-4">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1"><Smartphone size={13} /> Wish</div>
-                  <div className="font-display text-xl font-bold text-slate-900">AED {cashFlow.wish.toFixed(2)}</div>
+                <div className="rounded-xl p-4 chip-indigo">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-1 opacity-80"><Smartphone size={13} /> Wish</div>
+                  <div className="font-display text-xl font-bold">AED {cashFlow.wish.toFixed(2)}</div>
                 </div>
-                <div className="rounded-lg border border-slate-100 p-4">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1"><Landmark size={13} /> Bank</div>
-                  <div className="font-display text-xl font-bold text-slate-900">AED {cashFlow.bank.toFixed(2)}</div>
+                <div className="rounded-xl p-4 chip-sky">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-1 opacity-80"><Landmark size={13} /> Bank</div>
+                  <div className="font-display text-xl font-bold">AED {cashFlow.bank.toFixed(2)}</div>
                 </div>
-                <div className="rounded-lg p-4" style={{ background: '#F0FBF3' }}>
-                  <div className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">Total settled</div>
-                  <div className="font-display text-xl font-bold text-emerald-800">AED {cashFlow.total.toFixed(2)}</div>
+                <div className="rounded-xl p-4 chip-rose">
+                  <div className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-80">Total collected</div>
+                  <div className="font-display text-xl font-bold">AED {cashFlow.total.toFixed(2)}</div>
                 </div>
               </div>
               {cashFlow.total === 0 ? (
@@ -186,7 +200,7 @@ export default function DashboardPage() {
                     <XAxis type="number" tick={{ fontSize: 12 }} />
                     <YAxis type="category" dataKey="method" tick={{ fontSize: 12 }} width={50} />
                     <Tooltip formatter={(v) => `AED ${v.toFixed(2)}`} />
-                    <Bar dataKey="amount" fill="#22B2F0" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="amount" fill="#7C3AED" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}

@@ -9,7 +9,7 @@ import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import StatusPill from '../../components/StatusPill';
 import { useAuth } from '../../lib/AuthProvider';
 import { supabase } from '../../lib/supabaseClient';
-import { VENUES, STATUS_ALL, isSealed } from '../../lib/constants';
+import { VENUES, STATUS_ALL, isSealed, cashTotal, wishTotal, bankTotal } from '../../lib/constants';
 
 export default function BookingsPage() {
   const { profile } = useAuth();
@@ -198,9 +198,9 @@ export default function BookingsPage() {
                         <td className="px-5 py-3.5 text-slate-600">{b.event_date || '—'}</td>
                         <td className="px-5 py-3.5"><StatusPill status={b.booking_status} /></td>
                         <td className="px-5 py-3.5 text-slate-600">{b.deposit_status}</td>
-                        <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{b.settled_cash ? Number(b.settled_cash).toFixed(2) : '—'}</td>
-                        <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{b.settled_wish ? Number(b.settled_wish).toFixed(2) : '—'}</td>
-                        <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{b.settled_bank ? Number(b.settled_bank).toFixed(2) : '—'}</td>
+                        <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{cashTotal(b) ? cashTotal(b).toFixed(2) : '—'}</td>
+                        <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{wishTotal(b) ? wishTotal(b).toFixed(2) : '—'}</td>
+                        <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{bankTotal(b) ? bankTotal(b).toFixed(2) : '—'}</td>
                         <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-3 justify-end">
                             {b.booking_status === 'Confirmed' && profile.role === 'approver' && (

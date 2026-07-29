@@ -47,3 +47,20 @@ export function totalBalance(b) {
 export function settledTotal(b) {
   return (parseFloat(b.settled_cash) || 0) + (parseFloat(b.settled_wish) || 0) + (parseFloat(b.settled_bank) || 0);
 }
+// Combined money collected per method for a booking - the deposit was
+// paid via ONE method (payment_method), and the final settlement is
+// already split across methods. These add the deposit into whichever
+// method it actually went through, so the totals reflect everything
+// collected, not just the final settlement.
+export function cashTotal(b) {
+  const dep = b.payment_method === 'Cash' ? (parseFloat(b.deposit_amount_received) || 0) : 0;
+  return dep + (parseFloat(b.settled_cash) || 0);
+}
+export function wishTotal(b) {
+  const dep = b.payment_method === 'Wish' ? (parseFloat(b.deposit_amount_received) || 0) : 0;
+  return dep + (parseFloat(b.settled_wish) || 0);
+}
+export function bankTotal(b) {
+  const dep = b.payment_method === 'Bank' ? (parseFloat(b.deposit_amount_received) || 0) : 0;
+  return dep + (parseFloat(b.settled_bank) || 0);
+}
