@@ -10,7 +10,13 @@ import { STATUS_COLORS } from '../../lib/constants';
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function toDateKey(d) {
-  return d.toISOString().slice(0, 10);
+  // Use local date parts, NOT toISOString() - that converts to UTC and
+  // silently shifts the date by a day for any timezone ahead of UTC
+  // (which is exactly why bookings weren't showing up correctly).
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 export default function CalendarPage() {

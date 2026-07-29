@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { X, Lock, ShieldCheck } from 'lucide-react';
 import {
-  VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES,
-  isStatusLocked, isDepositLocked, isSealed, balanceDue,
+  VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES, PAYMENT_METHODS, ADD_ON_FOOD_OPTIONS,
+  isStatusLocked, isDepositLocked, isSealed, balanceDue, totalBalance,
 } from '../lib/constants';
 
 const inputCls = 'focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50 disabled:text-slate-400';
@@ -32,9 +32,13 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const isApprover = profile.role === 'approver';
-  const statusLocked = existing && isStatusLocked(booking) && !isApprover;
-  const depositLocked = existing && isDepositLocked(booking) && !isApprover;
-  const overriding = existing && (isStatusLocked(booking) || isDepositLocked(booking)) && isApprover;
+  // Once Confirmed/Completed, the WHOLE record is locked for non-approvers
+  // - not just status/deposit. This matches the DB trigger, which blocks
+  // any column change once a booking reaches that state.
+  const formLocked = existing && isStatusLocked(booking) && !isApprover;
+  const statusLocked = formLocked;
+  const depositLocked = formLocked;
+  const overriding = existing && isStatusLocked(booking) && isApprover;
   const sealed = existing && isSealed(booking);
   const rateMap = Object.fromEntries((packageRates || []).map((r) => [r.package_name, r.rate]));
   const packageOptions = [...(packageRates || []).map((r) => r.package_name), 'Special Offer'];
@@ -103,7 +107,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
         )}
         {overriding && !sealed && (
           <div className="mx-6 mt-4 override-banner border text-sm px-4 py-3 rounded-lg flex items-center gap-2">
-            <ShieldCheck size={15} /> You&apos;re editing a locked field as an approver. This is recorded.
+            <ShieldCheck size={15} /> This booking is Confirmed - you&apos;re editing it as an approver. This is recorded.
           </div>
         )}
         {existing && (b.created_by || b.updated_by) && namesById && (
@@ -122,33 +126,33 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
               </select>
             </Field>
             <Field label="Event Type">
-              <select className={inputCls} value={b.event_type || ''} onChange={(e) => set('event_type', e.target.value)}>
+              <select className={inputCls} value={b.event_type || ''} onChange={(e) => set('event_type', e.target.value)} disabled={formLocked}>
                 {EVENT_TYPES.map((v) => <option key={v}>{v}</option>)}
               </select>
             </Field>
             <Field label="School / Nursery Name" span>
-              <input className={inputCls} value={b.school_name || ''} onChange={(e) => set('school_name', e.target.value)} placeholder="e.g. Kids World Nursery" />
+              <input className={inputCls} value={b.school_name || ''} onChange={(e) => set('school_name', e.target.value)} placeholder="e.g. Kids World Nursery" disabled={formLocked} />
             </Field>
-            <Field label="Contact Person"><input className={inputCls} value={b.contact_person || ''} onChange={(e) => set('contact_person', e.target.value)} /></Field>
-            <Field label="Phone"><input className={inputCls} value={b.phone || ''} onChange={(e) => set('phone', e.target.value)} /></Field>
-            <Field label="Email" span><input className={inputCls} value={b.email || ''} onChange={(e) => set('email', e.target.value)} /></Field>
+            <Field label="Contact Person"><input className={inputCls} value={b.contact_person || ''} onChange={(e) => set('contact_person', e.target.value)} disabled={formLocked} /></Field>
+            <Field label="Phone"><input className={inputCls} value={b.phone || ''} onChange={(e) => set('phone', e.target.value)} disabled={formLocked} /></Field>
+            <Field label="Email" span><input className={inputCls} value={b.email || ''} onChange={(e) => set('email', e.target.value)} disabled={formLocked} /></Field>
           </Section>
 
           <Section title="Event Details">
-            <Field label="Event Date"><input type="date" className={inputCls} value={b.event_date || ''} onChange={(e) => set('event_date', e.target.value)} /></Field>
+            <Field label="Event Date"><input type="date" className={inputCls} value={b.event_date || ''} onChange={(e) => set('event_date', e.target.value)} disabled={formLocked} /></Field>
             <Field label="Event Time">
-              <select className={inputCls} value={b.event_time || ''} onChange={(e) => set('event_time', e.target.value)}>
+              <select className={inputCls} value={b.event_time || ''} onChange={(e) => set('event_time', e.target.value)} disabled={formLocked}>
                 <option value="">Select a time</option>
                 {EVENT_TIMES.map((v) => <option key={v}>{v}</option>)}
               </select>
             </Field>
-            <Field label="Grade Level / Age"><input className={inputCls} value={b.grade_level || ''} onChange={(e) => set('grade_level', e.target.value)} /></Field>
-            <Field label="# Students"><input type="number" className={inputCls} value={b.number_of_students || ''} onChange={(e) => set('number_of_students', e.target.value)} /></Field>
+            <Field label="Grade Level / Age"><input className={inputCls} value={b.grade_level || ''} onChange={(e) => set('grade_level', e.target.value)} disabled={formLocked} /></Field>
+            <Field label="# Students"><input type="number" className={inputCls} value={b.number_of_students || ''} onChange={(e) => set('number_of_students', e.target.value)} disabled={formLocked} /></Field>
           </Section>
 
           <Section title="Package &amp; Pricing">
             <Field label="Package">
-              <select className={inputCls} value={b.package_selected || ''} onChange={(e) => set('package_selected', e.target.value)}>
+              <select className={inputCls} value={b.package_selected || ''} onChange={(e) => set('package_selected', e.target.value)} disabled={formLocked}>
                 {packageOptions.map((v) => <option key={v}>{v}</option>)}
               </select>
               {isSpecialOffer && (
@@ -161,9 +165,20 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
                 className={inputCls}
                 value={b.total_price || ''}
                 onChange={(e) => set('total_price', e.target.value)}
-                disabled={!isSpecialOffer}
+                disabled={formLocked || !isSpecialOffer}
               />
               {!isSpecialOffer && <p className="text-[11px] text-slate-400 mt-1">Auto-calculated from package rate × students.</p>}
+            </Field>
+          </Section>
+
+          <Section title="Add-On" tint="#FFF9EC">
+            <Field label="Add-On Food">
+              <select className={inputCls} value={b.add_on_food || 'None'} onChange={(e) => set('add_on_food', e.target.value)} disabled={formLocked}>
+                {ADD_ON_FOOD_OPTIONS.map((v) => <option key={v}>{v}</option>)}
+              </select>
+            </Field>
+            <Field label="Add-On Fee (AED)">
+              <input type="number" className={inputCls} value={b.add_on_fee || ''} onChange={(e) => set('add_on_fee', e.target.value)} disabled={formLocked} />
             </Field>
           </Section>
 
@@ -175,7 +190,14 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
             </Field>
             <Field label="Deposit Amount Received"><input type="number" className={inputCls} value={b.deposit_amount_received || ''} onChange={(e) => set('deposit_amount_received', e.target.value)} disabled={depositLocked} /></Field>
             <Field label="Deposit Date"><input type="date" className={inputCls} value={b.deposit_date || ''} onChange={(e) => set('deposit_date', e.target.value)} disabled={depositLocked} /></Field>
+            <Field label="Payment Method">
+              <select className={inputCls} value={b.payment_method || ''} onChange={(e) => set('payment_method', e.target.value)} disabled={depositLocked}>
+                <option value="">Select method</option>
+                {PAYMENT_METHODS.map((v) => <option key={v}>{v}</option>)}
+              </select>
+            </Field>
             <Field label="Balance Due (AED)"><input className={inputCls} value={balanceDue(b).toFixed(2)} disabled /></Field>
+            <Field label="Total Balance incl. Add-On (AED)"><input className={inputCls} value={totalBalance(b).toFixed(2)} disabled /></Field>
           </Section>
 
           <Section title="Status &amp; Assignment">
@@ -184,12 +206,12 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
                 {STATUS_ALL.map((v) => <option key={v}>{v}</option>)}
               </select>
             </Field>
-            <Field label="Follow-up Date"><input type="date" className={inputCls} value={b.follow_up_date || ''} onChange={(e) => set('follow_up_date', e.target.value)} /></Field>
-            <Field label="Team Assigned" span><input className={inputCls} value={b.team_assigned || ''} onChange={(e) => set('team_assigned', e.target.value)} /></Field>
+            <Field label="Follow-up Date"><input type="date" className={inputCls} value={b.follow_up_date || ''} onChange={(e) => set('follow_up_date', e.target.value)} disabled={formLocked} /></Field>
+            <Field label="Team Assigned" span><input className={inputCls} value={b.team_assigned || ''} onChange={(e) => set('team_assigned', e.target.value)} disabled={formLocked} /></Field>
           </Section>
 
           <Section title="Notes">
-            <Field label="Special Requests / Notes" span><textarea className={inputCls} rows={2} value={b.notes || ''} onChange={(e) => set('notes', e.target.value)} /></Field>
+            <Field label="Special Requests / Notes" span><textarea className={inputCls} rows={2} value={b.notes || ''} onChange={(e) => set('notes', e.target.value)} disabled={formLocked} /></Field>
           </Section>
         </div>
 
@@ -201,7 +223,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
           ) : <span />}
           <div className="flex gap-2">
             <button onClick={onCancel} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
-            <button onClick={handleSave} disabled={saving} className="btn-primary px-4 py-2 text-sm font-semibold rounded-lg disabled:opacity-60">
+            <button onClick={handleSave} disabled={saving || formLocked} className="btn-primary px-4 py-2 text-sm font-semibold rounded-lg disabled:opacity-60">
               {saving ? 'Saving…' : 'Save Booking'}
             </button>
           </div>

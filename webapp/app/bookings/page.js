@@ -47,7 +47,8 @@ export default function BookingsPage() {
       event_date: '', event_time: '', event_type: 'School Trip / Field Visit',
       grade_level: '', number_of_students: '',
       package_selected: 'Package A', total_price: '',
-      deposit_status: 'Not Requested', deposit_amount_received: '', deposit_date: '',
+      deposit_status: 'Not Requested', deposit_amount_received: '', deposit_date: '', payment_method: '',
+      add_on_food: 'None', add_on_fee: '',
       booking_status: 'Tentative', team_assigned: '',
       notes: '', follow_up_date: '',
     };
@@ -56,7 +57,7 @@ export default function BookingsPage() {
   // Postgres numeric columns reject "" (empty string) - they need an
   // actual number or null. This converts any blank numeric field before
   // it's sent, so a removed/skipped field can never cause a save error.
-  const NUMERIC_FIELDS = ['number_of_students', 'total_price', 'deposit_amount_received'];
+  const NUMERIC_FIELDS = ['number_of_students', 'total_price', 'deposit_amount_received', 'add_on_fee'];
   const DATE_FIELDS = ['event_date', 'deposit_date', 'follow_up_date'];
   function sanitize(b) {
     const out = { ...b };
