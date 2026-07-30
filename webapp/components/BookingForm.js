@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { X, Lock, ShieldCheck } from 'lucide-react';
 import {
   VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES, PAYMENT_METHODS, ADD_ON_FOOD_OPTIONS,
-  isSealed, balanceDue, totalBalance,
+  isStatusLocked, isSealed, balanceDue, totalBalance,
 } from '../lib/constants';
 
 const inputCls = 'focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50 disabled:text-slate-400';
@@ -32,14 +32,14 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const isApprover = profile.role === 'approver';
-  // Once a booking has EVER been Confirmed/Completed, the WHOLE record
-  // is locked for non-approvers - based on the permanent ever_confirmed
-  // flag, not the current status, so it can't be bypassed by reverting
-  // the status back to Tentative.
-  const formLocked = existing && booking.ever_confirmed && !isApprover;
+  // Once Confirmed/Completed, the record is locked for non-approvers -
+  // Agents can't touch or delete it. Approvers can edit or revert it
+  // freely, by design: this restriction is specifically to keep Agents
+  // out, not to limit Approvers.
+  const formLocked = existing && isStatusLocked(booking) && !isApprover;
   const statusLocked = formLocked;
   const depositLocked = formLocked;
-  const overriding = existing && booking.ever_confirmed && isApprover;
+  const overriding = existing && isStatusLocked(booking) && isApprover;
   const sealed = existing && isSealed(booking);
   const rateMap = Object.fromEntries((packageRates || []).map((r) => [r.package_name, r.rate]));
   const packageOptions = [...(packageRates || []).map((r) => r.package_name), 'Special Offer'];
