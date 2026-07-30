@@ -85,7 +85,7 @@ export default function PricingPage() {
                     <span className="text-sm font-medium text-slate-800">{r.package_name}</span>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1">
-                        <span className="text-xs text-slate-400">AED</span>
+                        <span className="text-xs text-slate-400">$</span>
                         <input
                           type="number"
                           defaultValue={r.rate}
@@ -111,7 +111,7 @@ export default function PricingPage() {
             <div className="flex items-center gap-2 mb-4"><Plus size={16} className="text-slate-500" /><h3 className="font-display font-semibold text-slate-900">Add a package</h3></div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Package name</label>
             <input className="focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mb-3" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Package D" />
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Rate per student (AED)</label>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Rate per student ($)</label>
             <input type="number" className="focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mb-3" value={newRate} onChange={(e) => setNewRate(e.target.value)} />
             <button onClick={addPackage} className="btn-primary w-full py-2 rounded-lg text-sm font-semibold">Add package</button>
             <p className="text-[11px] text-slate-400 mt-3">

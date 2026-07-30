@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
+import DualCurrencyInput from './DualCurrencyInput';
 import { totalBalance } from '../lib/constants';
 
 export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
@@ -35,28 +36,30 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
         <h3 className="font-display font-bold text-slate-900 mb-1">{isCorrection ? 'Edit settlement' : 'Complete this booking'}</h3>
         <p className="text-sm text-slate-500 mb-4">
           {booking.school_name || 'This booking'} — balance due{' '}
-          <span className="font-semibold text-slate-700">AED {due.toFixed(2)}</span>
+          <span className="font-semibold text-slate-700">${due.toFixed(2)}</span>
         </p>
 
-        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">How was it settled?</label>
+        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+          How was it settled? <span className="normal-case font-normal text-slate-400">(enter in $ or switch to LBP)</span>
+        </label>
         <div className="space-y-2 mb-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600 w-14">Cash</span>
-            <input type="number" className="focus-ring flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg" value={cash} onChange={(e) => setCash(e.target.value)} placeholder="0" />
+            <span className="text-sm text-slate-600 w-12 shrink-0">Cash</span>
+            <div className="flex-1"><DualCurrencyInput value={cash} onChange={setCash} /></div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600 w-14">Wish</span>
-            <input type="number" className="focus-ring flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg" value={wish} onChange={(e) => setWish(e.target.value)} placeholder="0" />
+            <span className="text-sm text-slate-600 w-12 shrink-0">Wish</span>
+            <div className="flex-1"><DualCurrencyInput value={wish} onChange={setWish} /></div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600 w-14">Bank</span>
-            <input type="number" className="focus-ring flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg" value={bank} onChange={(e) => setBank(e.target.value)} placeholder="0" />
+            <span className="text-sm text-slate-600 w-12 shrink-0">Bank</span>
+            <div className="flex-1"><DualCurrencyInput value={bank} onChange={setBank} /></div>
           </div>
         </div>
 
         <div className="flex items-center justify-between text-sm mb-4 px-1">
           <span className="text-slate-500">Total entered</span>
-          <span className="font-semibold text-slate-800">AED {settled.toFixed(2)}</span>
+          <span className="font-semibold text-slate-800">${settled.toFixed(2)}</span>
         </div>
 
         {diff !== 0 && (
@@ -64,8 +67,8 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
             <AlertTriangle size={14} className="mt-0.5 shrink-0" />
             <span>
               {diff > 0
-                ? `This is AED ${diff.toFixed(2)} more than the balance due.`
-                : `This is AED ${Math.abs(diff).toFixed(2)} short of the balance due.`}
+                ? `This is $${diff.toFixed(2)} more than the balance due.`
+                : `This is $${Math.abs(diff).toFixed(2)} short of the balance due.`}
               {' '}You can still save this if it's correct (e.g. a discount or rounding).
             </span>
           </div>

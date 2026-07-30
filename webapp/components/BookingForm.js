@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, Lock, ShieldCheck } from 'lucide-react';
+import DualCurrencyInput from './DualCurrencyInput';
 import {
   VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES, PAYMENT_METHODS, ADD_ON_FOOD_OPTIONS,
   isStatusLocked, balanceDue, grandTotal,
@@ -159,7 +160,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
                 <p className="text-[11px] text-amber-700 mt-1">Special pricing - enter manually and confirm with an approver before finalizing.</p>
               )}
             </Field>
-            <Field label="Total Price (AED)">
+            <Field label="Total Price ($)">
               <input
                 type="number"
                 className={inputCls}
@@ -177,10 +178,10 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
                 {ADD_ON_FOOD_OPTIONS.map((v) => <option key={v}>{v}</option>)}
               </select>
             </Field>
-            <Field label="Add-On Fee (AED)">
+            <Field label="Add-On Fee ($)">
               <input type="number" className={inputCls} value={b.add_on_fee || ''} onChange={(e) => set('add_on_fee', e.target.value)} disabled={formLocked} />
             </Field>
-            <Field label="Grand Total incl. Add-On (AED)"><input className={inputCls} value={grandTotal(b).toFixed(2)} disabled /></Field>
+            <Field label="Grand Total incl. Add-On ($)"><input className={inputCls} value={grandTotal(b).toFixed(2)} disabled /></Field>
           </Section>
 
           <Section title="Deposit &amp; Payment" tint="#F8FAFC">
@@ -189,7 +190,9 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
                 {DEPOSIT_STATUSES.map((v) => <option key={v}>{v}</option>)}
               </select>
             </Field>
-            <Field label="Deposit Amount Received"><input type="number" className={inputCls} value={b.deposit_amount_received || ''} onChange={(e) => set('deposit_amount_received', e.target.value)} disabled={depositLocked} /></Field>
+            <Field label="Deposit Amount Received ($)">
+              <DualCurrencyInput value={b.deposit_amount_received || ''} onChange={(v) => set('deposit_amount_received', v)} disabled={depositLocked} />
+            </Field>
             <Field label="Deposit Date"><input type="date" className={inputCls} value={b.deposit_date || ''} onChange={(e) => set('deposit_date', e.target.value)} disabled={depositLocked} /></Field>
             <Field label="Payment Method">
               <select className={inputCls} value={b.payment_method || ''} onChange={(e) => set('payment_method', e.target.value)} disabled={depositLocked}>
@@ -197,7 +200,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
                 {PAYMENT_METHODS.map((v) => <option key={v}>{v}</option>)}
               </select>
             </Field>
-            <Field label="Balance Due (AED)"><input className={inputCls} value={balanceDue(b).toFixed(2)} disabled /></Field>
+            <Field label="Balance Due ($)"><input className={inputCls} value={balanceDue(b).toFixed(2)} disabled /></Field>
           </Section>
 
           <Section title="Status &amp; Assignment">

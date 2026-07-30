@@ -13,6 +13,11 @@ export const STATUS_ALL = ['Tentative', 'Deposit Pending', 'Confirmed', 'Complet
 export const DEPOSIT_STATUSES = ['Not Requested', 'Requested', 'Partial', 'Received'];
 export const PAYMENT_METHODS = ['Cash', 'Wish', 'Bank'];
 export const ADD_ON_FOOD_OPTIONS = ['None', 'Mc Do', 'Man2ouche'];
+// Everything is stored and displayed in USD throughout the app. The
+// only place LBP is allowed as an input is Deposit Amount Received and
+// the final settlement amounts - typed in LBP there, auto-converted to
+// USD immediately using this rate.
+export const LBP_RATE = 90000;
 
 // A brighter, more playful palette - this is a kids entertainment
 // business, the tool running it shouldn't feel like a spreadsheet.

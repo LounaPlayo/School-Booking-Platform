@@ -176,19 +176,19 @@ export default function DashboardPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
                 <div className="rounded-xl p-4 chip-emerald">
                   <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-1 opacity-80"><Banknote size={13} /> Cash</div>
-                  <div className="font-display text-xl font-bold">AED {cashFlow.cash.toFixed(2)}</div>
+                  <div className="font-display text-xl font-bold">${cashFlow.cash.toFixed(2)}</div>
                 </div>
                 <div className="rounded-xl p-4 chip-indigo">
                   <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-1 opacity-80"><Smartphone size={13} /> Wish</div>
-                  <div className="font-display text-xl font-bold">AED {cashFlow.wish.toFixed(2)}</div>
+                  <div className="font-display text-xl font-bold">${cashFlow.wish.toFixed(2)}</div>
                 </div>
                 <div className="rounded-xl p-4 chip-sky">
                   <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-1 opacity-80"><Landmark size={13} /> Bank</div>
-                  <div className="font-display text-xl font-bold">AED {cashFlow.bank.toFixed(2)}</div>
+                  <div className="font-display text-xl font-bold">${cashFlow.bank.toFixed(2)}</div>
                 </div>
                 <div className="rounded-xl p-4 chip-rose">
                   <div className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-80">Total collected</div>
-                  <div className="font-display text-xl font-bold">AED {cashFlow.total.toFixed(2)}</div>
+                  <div className="font-display text-xl font-bold">${cashFlow.total.toFixed(2)}</div>
                 </div>
               </div>
               {cashFlow.total === 0 ? (
@@ -199,7 +199,7 @@ export default function DashboardPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
                     <XAxis type="number" tick={{ fontSize: 12 }} />
                     <YAxis type="category" dataKey="method" tick={{ fontSize: 12 }} width={50} />
-                    <Tooltip formatter={(v) => `AED ${v.toFixed(2)}`} />
+                    <Tooltip formatter={(v) => `$${v.toFixed(2)}`} />
                     <Bar dataKey="amount" fill="#7C3AED" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
