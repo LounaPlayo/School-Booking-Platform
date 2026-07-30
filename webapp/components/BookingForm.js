@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { X, Lock, ShieldCheck } from 'lucide-react';
 import {
   VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES, PAYMENT_METHODS, ADD_ON_FOOD_OPTIONS,
-  isStatusLocked, isSealed, balanceDue, totalBalance,
+  isStatusLocked, balanceDue, grandTotal,
 } from '../lib/constants';
 
 const inputCls = 'focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50 disabled:text-slate-400';
@@ -40,7 +40,6 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
   const statusLocked = formLocked;
   const depositLocked = formLocked;
   const overriding = existing && isStatusLocked(booking) && isApprover;
-  const sealed = existing && isSealed(booking);
   const rateMap = Object.fromEntries((packageRates || []).map((r) => [r.package_name, r.rate]));
   const packageOptions = [...(packageRates || []).map((r) => r.package_name), 'Special Offer'];
   const isSpecialOffer = b.package_selected === 'Special Offer';
@@ -101,12 +100,12 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
           <button onClick={onCancel} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
         </div>
 
-        {sealed && (
+        {formLocked && (
           <div className="mx-6 mt-4 seal-banner border text-sm px-4 py-3 rounded-lg flex items-center gap-2">
-            <Lock size={15} /> This booking is Confirmed. Deletion is permanently blocked for everyone, including approvers.
+            <Lock size={15} /> This booking is Confirmed. Only an approver can edit or delete it here - to close the final settlement, use &quot;Mark Completed&quot; on the bookings list instead.
           </div>
         )}
-        {overriding && !sealed && (
+        {overriding && (
           <div className="mx-6 mt-4 override-banner border text-sm px-4 py-3 rounded-lg flex items-center gap-2">
             <ShieldCheck size={15} /> This booking is Confirmed - you&apos;re editing it as an approver. This is recorded.
           </div>
@@ -181,6 +180,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
             <Field label="Add-On Fee (AED)">
               <input type="number" className={inputCls} value={b.add_on_fee || ''} onChange={(e) => set('add_on_fee', e.target.value)} disabled={formLocked} />
             </Field>
+            <Field label="Grand Total incl. Add-On (AED)"><input className={inputCls} value={grandTotal(b).toFixed(2)} disabled /></Field>
           </Section>
 
           <Section title="Deposit &amp; Payment" tint="#F8FAFC">
@@ -198,7 +198,6 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
               </select>
             </Field>
             <Field label="Balance Due (AED)"><input className={inputCls} value={balanceDue(b).toFixed(2)} disabled /></Field>
-            <Field label="Total Balance incl. Add-On (AED)"><input className={inputCls} value={totalBalance(b).toFixed(2)} disabled /></Field>
           </Section>
 
           <Section title="Status &amp; Assignment">
@@ -219,7 +218,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
         {error && <div className="mx-6 mb-2 text-sm text-red-600">{error}</div>}
 
         <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex items-center justify-between rounded-b-2xl">
-          {existing && !sealed ? (
+          {existing && isApprover ? (
             <button onClick={() => onDeleteRequest(b)} className="text-sm font-semibold text-red-500 hover:text-red-600">Delete booking</button>
           ) : <span />}
           <div className="flex gap-2">

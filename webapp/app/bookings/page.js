@@ -9,7 +9,7 @@ import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import StatusPill from '../../components/StatusPill';
 import { useAuth } from '../../lib/AuthProvider';
 import { supabase } from '../../lib/supabaseClient';
-import { VENUES, STATUS_ALL, isSealed, cashTotal, wishTotal, bankTotal, grandTotal } from '../../lib/constants';
+import { VENUES, STATUS_ALL, cashTotal, wishTotal, bankTotal, grandTotal } from '../../lib/constants';
 
 export default function BookingsPage() {
   const { profile } = useAuth();
@@ -102,7 +102,7 @@ export default function BookingsPage() {
     setErrorMsg('');
     const { error } = await supabase.from('bookings').delete().eq('id', b.id);
     if (error) {
-      setErrorMsg("This booking couldn't be deleted - it's sealed at the database level.");
+      setErrorMsg("This booking couldn't be deleted - only an approver can delete bookings.");
     }
     setDeleteConfirm(null);
     loadAll();
@@ -189,7 +189,7 @@ export default function BookingsPage() {
                 </thead>
                 <tbody>
                   {filtered.map((b) => {
-                    const sealed = isSealed(b);
+                    const isApprover = profile.role === 'approver';
                     return (
                       <tr key={b.id} className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer" onClick={() => openEdit(b)}>
                         <td className="px-5 py-3.5">
@@ -205,15 +205,20 @@ export default function BookingsPage() {
                         <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{bankTotal(b) ? bankTotal(b).toFixed(2) : '—'}</td>
                         <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-3 justify-end">
-                            {(b.booking_status === 'Confirmed' || b.booking_status === 'Completed') && profile.role === 'approver' && (
+                            {b.booking_status === 'Confirmed' && (
                               <button onClick={() => setCompleteTarget(b)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">
-                                {b.booking_status === 'Completed' ? 'Edit Settlement' : 'Mark Completed'}
+                                Mark Completed
                               </button>
                             )}
-                            {sealed ? (
-                              <span title="Confirmed - permanent record" className="seal-badge"><Lock size={15} /></span>
-                            ) : (
+                            {b.booking_status === 'Completed' && isApprover && (
+                              <button onClick={() => setCompleteTarget(b)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">
+                                Edit Settlement
+                              </button>
+                            )}
+                            {isApprover ? (
                               <button title="Delete booking" onClick={() => setDeleteConfirm(b)} className="text-slate-300 hover:text-red-500"><X size={16} /></button>
+                            ) : (
+                              <span title="Only an approver can delete a booking" className="seal-badge"><Lock size={15} /></span>
                             )}
                           </div>
                         </td>
