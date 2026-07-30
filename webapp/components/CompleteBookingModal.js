@@ -15,8 +15,10 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
   const due = totalBalance(booking);
   const settled = (parseFloat(cash) || 0) + (parseFloat(wish) || 0) + (parseFloat(bank) || 0);
   const diff = Math.round((settled - due) * 100) / 100;
+  const isShort = diff < 0;
 
   async function handleConfirm() {
+    if (isShort) return; // blocked - guarded in the UI too, this is just a safety net
     setSaving(true);
     await onConfirm({
       settled_cash: parseFloat(cash) || 0,
@@ -62,15 +64,18 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
           <span className="font-semibold text-slate-800">${settled.toFixed(2)}</span>
         </div>
 
-        {diff !== 0 && (
-          <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+        {isShort && (
+          <div className="flex items-start gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
             <AlertTriangle size={14} className="mt-0.5 shrink-0" />
             <span>
-              {diff > 0
-                ? `This is $${diff.toFixed(2)} more than the balance due.`
-                : `This is $${Math.abs(diff).toFixed(2)} short of the balance due.`}
-              {' '}You can still save this if it's correct (e.g. a discount or rounding).
+              This is ${Math.abs(diff).toFixed(2)} short of the balance due. The full amount must be entered before this booking can be marked Completed - partial settlements aren&apos;t allowed.
             </span>
+          </div>
+        )}
+        {!isShort && diff > 0 && (
+          <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+            <span>This is ${diff.toFixed(2)} more than the balance due - that&apos;s fine if it&apos;s correct (e.g. a tip or rounding).</span>
           </div>
         )}
 
@@ -79,7 +84,7 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
 
         <div className="flex justify-end gap-2">
           <button onClick={onCancel} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
-          <button onClick={handleConfirm} disabled={saving} className="btn-primary px-4 py-2 text-sm font-semibold rounded-lg disabled:opacity-60">
+          <button onClick={handleConfirm} disabled={saving || isShort} className="btn-primary px-4 py-2 text-sm font-semibold rounded-lg disabled:opacity-60">
             {saving ? 'Saving…' : isCorrection ? 'Save Changes' : 'Mark Completed'}
           </button>
         </div>

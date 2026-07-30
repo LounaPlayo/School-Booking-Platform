@@ -85,6 +85,10 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
   async function handleSave() {
     if (!b.school_name?.trim()) { setError('School name is required.'); return; }
     if (!b.event_date) { setError('Event date is required.'); return; }
+    if (parseFloat(b.deposit_amount_received) > 0 && !b.payment_method) {
+      setError('Select a Payment Method for the deposit before saving.');
+      return;
+    }
     setError('');
     setSaving(true);
     await onSave(b);
