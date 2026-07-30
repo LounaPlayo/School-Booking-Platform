@@ -9,7 +9,7 @@ import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import StatusPill from '../../components/StatusPill';
 import { useAuth } from '../../lib/AuthProvider';
 import { supabase } from '../../lib/supabaseClient';
-import { VENUES, STATUS_ALL, isSealed, cashTotal, wishTotal, bankTotal } from '../../lib/constants';
+import { VENUES, STATUS_ALL, isSealed, cashTotal, wishTotal, bankTotal, grandTotal } from '../../lib/constants';
 
 export default function BookingsPage() {
   const { profile } = useAuth();
@@ -179,6 +179,7 @@ export default function BookingsPage() {
                     <th className="px-5 py-3 font-semibold">Venue</th>
                     <th className="px-5 py-3 font-semibold">Event Date</th>
                     <th className="px-5 py-3 font-semibold">Status</th>
+                    <th className="px-5 py-3 font-semibold text-right">Total Amount</th>
                     <th className="px-5 py-3 font-semibold">Deposit</th>
                     <th className="px-5 py-3 font-semibold text-right">Cash</th>
                     <th className="px-5 py-3 font-semibold text-right">Wish</th>
@@ -197,6 +198,7 @@ export default function BookingsPage() {
                         <td className="px-5 py-3.5 text-slate-600">{b.venue}</td>
                         <td className="px-5 py-3.5 text-slate-600">{b.event_date || '—'}</td>
                         <td className="px-5 py-3.5"><StatusPill status={b.booking_status} /></td>
+                        <td className="px-5 py-3.5 text-right font-mono text-xs font-semibold text-slate-800">{grandTotal(b) ? grandTotal(b).toFixed(2) : '—'}</td>
                         <td className="px-5 py-3.5 text-slate-600">{b.deposit_status}</td>
                         <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{cashTotal(b) ? cashTotal(b).toFixed(2) : '—'}</td>
                         <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{wishTotal(b) ? wishTotal(b).toFixed(2) : '—'}</td>
