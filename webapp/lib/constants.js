@@ -31,10 +31,12 @@ export function isStatusLocked(b) {
 export function isDepositLocked(b) {
   return b.deposit_status === 'Received';
 }
-// A booking can never be deleted once it's Confirmed or Completed -
-// deposit status no longer factors into this rule.
+// A booking can never be deleted once it has EVER been Confirmed or
+// Completed - this checks the permanent ever_confirmed flag, not the
+// current status, since status can be reverted for a correction but
+// the deletion protection must not follow it back.
 export function isSealed(b) {
-  return isStatusLocked(b);
+  return !!b.ever_confirmed;
 }
 export function balanceDue(b) {
   const t = parseFloat(b.total_price) || 0;

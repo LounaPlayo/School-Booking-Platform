@@ -203,8 +203,10 @@ export default function BookingsPage() {
                         <td className="px-5 py-3.5 text-right text-slate-600 font-mono text-xs">{bankTotal(b) ? bankTotal(b).toFixed(2) : '—'}</td>
                         <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-3 justify-end">
-                            {b.booking_status === 'Confirmed' && profile.role === 'approver' && (
-                              <button onClick={() => setCompleteTarget(b)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">Mark Completed</button>
+                            {(b.booking_status === 'Confirmed' || b.booking_status === 'Completed') && profile.role === 'approver' && (
+                              <button onClick={() => setCompleteTarget(b)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">
+                                {b.booking_status === 'Completed' ? 'Edit Settlement' : 'Mark Completed'}
+                              </button>
                             )}
                             {sealed ? (
                               <span title="Confirmed - permanent record" className="seal-badge"><Lock size={15} /></span>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { X, Lock, ShieldCheck } from 'lucide-react';
 import {
   VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES, PAYMENT_METHODS, ADD_ON_FOOD_OPTIONS,
-  isStatusLocked, isDepositLocked, isSealed, balanceDue, totalBalance,
+  isSealed, balanceDue, totalBalance,
 } from '../lib/constants';
 
 const inputCls = 'focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50 disabled:text-slate-400';
@@ -27,52 +27,19 @@ function Section({ title, tint, children }) {
   );
 }
 
-function PaymentSummary({ b }) {
-  const total = parseFloat(b.total_price) || 0;
-  const addOn = parseFloat(b.add_on_fee) || 0;
-  const deposit = parseFloat(b.deposit_amount_received) || 0;
-  const cash = parseFloat(b.settled_cash) || 0;
-  const wish = parseFloat(b.settled_wish) || 0;
-  const bank = parseFloat(b.settled_bank) || 0;
-  const grandTotal = total + addOn;
-  const remaining = Math.max(grandTotal - deposit - cash - wish - bank, 0);
-
-  const parts = [{ label: 'Total', value: grandTotal }];
-  if (deposit > 0) parts.push({ label: 'Deposit', value: deposit, minus: true });
-  if (cash > 0) parts.push({ label: 'Cash', value: cash, minus: true });
-  if (wish > 0) parts.push({ label: 'Wish', value: wish, minus: true });
-  if (bank > 0) parts.push({ label: 'Bank', value: bank, minus: true });
-
-  return (
-    <div className="rounded-lg border border-emerald-200 px-3 py-2 mt-2" style={{ background: '#F0FBF3' }}>
-      <div className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-sm">
-        {parts.map((p, i) => (
-          <span key={i} className="font-mono text-slate-700">
-            {i > 0 && <span className="text-slate-400 mr-1.5">{p.minus ? '−' : ''}</span>}
-            {p.label} {p.value.toFixed(2)}
-          </span>
-        ))}
-        <span className="text-slate-400 mx-0.5">=</span>
-        <span className="font-mono font-bold text-emerald-800">
-          {remaining <= 0 ? 'Settled' : `Balance ${remaining.toFixed(2)}`}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 export default function BookingForm({ booking, existing, profile, packageRates, onCancel, onSave, onDeleteRequest, namesById }) {
   const [b, setB] = useState(booking);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const isApprover = profile.role === 'approver';
-  // Once Confirmed/Completed, the WHOLE record is locked for non-approvers
-  // - not just status/deposit. This matches the DB trigger, which blocks
-  // any column change once a booking reaches that state.
-  const formLocked = existing && isStatusLocked(booking) && !isApprover;
+  // Once a booking has EVER been Confirmed/Completed, the WHOLE record
+  // is locked for non-approvers - based on the permanent ever_confirmed
+  // flag, not the current status, so it can't be bypassed by reverting
+  // the status back to Tentative.
+  const formLocked = existing && booking.ever_confirmed && !isApprover;
   const statusLocked = formLocked;
   const depositLocked = formLocked;
-  const overriding = existing && isStatusLocked(booking) && isApprover;
+  const overriding = existing && booking.ever_confirmed && isApprover;
   const sealed = existing && isSealed(booking);
   const rateMap = Object.fromEntries((packageRates || []).map((r) => [r.package_name, r.rate]));
   const packageOptions = [...(packageRates || []).map((r) => r.package_name), 'Special Offer'];
@@ -243,16 +210,6 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
             <Field label="Follow-up Date"><input type="date" className={inputCls} value={b.follow_up_date || ''} onChange={(e) => set('follow_up_date', e.target.value)} disabled={formLocked} /></Field>
             <Field label="Team Assigned" span><input className={inputCls} value={b.team_assigned || ''} onChange={(e) => set('team_assigned', e.target.value)} disabled={formLocked} /></Field>
           </Section>
-
-          {(b.booking_status === 'Completed' || existing) && (
-            <Section title="Completion &amp; Settlement" tint="#F0FBF3">
-              <Field label="Settled - Cash (AED)"><input type="number" className={inputCls} value={b.settled_cash || ''} onChange={(e) => set('settled_cash', e.target.value)} disabled={formLocked} /></Field>
-              <Field label="Settled - Wish (AED)"><input type="number" className={inputCls} value={b.settled_wish || ''} onChange={(e) => set('settled_wish', e.target.value)} disabled={formLocked} /></Field>
-              <Field label="Settled - Bank (AED)"><input type="number" className={inputCls} value={b.settled_bank || ''} onChange={(e) => set('settled_bank', e.target.value)} disabled={formLocked} /></Field>
-              <Field label="Settlement Date"><input type="date" className={inputCls} value={b.balance_settled_date || ''} onChange={(e) => set('balance_settled_date', e.target.value)} disabled={formLocked} /></Field>
-              <div className="col-span-2"><PaymentSummary b={b} /></div>
-            </Section>
-          )}
 
           <Section title="Notes">
             <Field label="Special Requests / Notes" span><textarea className={inputCls} rows={2} value={b.notes || ''} onChange={(e) => set('notes', e.target.value)} disabled={formLocked} /></Field>

@@ -5,10 +5,11 @@ import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { totalBalance } from '../lib/constants';
 
 export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
-  const [cash, setCash] = useState('');
-  const [wish, setWish] = useState('');
-  const [bank, setBank] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const isCorrection = booking.booking_status === 'Completed';
+  const [cash, setCash] = useState(booking.settled_cash || '');
+  const [wish, setWish] = useState(booking.settled_wish || '');
+  const [bank, setBank] = useState(booking.settled_bank || '');
+  const [date, setDate] = useState(booking.balance_settled_date || new Date().toISOString().slice(0, 10));
   const [saving, setSaving] = useState(false);
   const due = totalBalance(booking);
   const settled = (parseFloat(cash) || 0) + (parseFloat(wish) || 0) + (parseFloat(bank) || 0);
@@ -31,7 +32,7 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
         <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#D4F7DA' }}>
           <CheckCircle2 size={18} style={{ color: '#166534' }} />
         </div>
-        <h3 className="font-display font-bold text-slate-900 mb-1">Complete this booking</h3>
+        <h3 className="font-display font-bold text-slate-900 mb-1">{isCorrection ? 'Edit settlement' : 'Complete this booking'}</h3>
         <p className="text-sm text-slate-500 mb-4">
           {booking.school_name || 'This booking'} — balance due{' '}
           <span className="font-semibold text-slate-700">AED {due.toFixed(2)}</span>
@@ -76,7 +77,7 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
         <div className="flex justify-end gap-2">
           <button onClick={onCancel} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
           <button onClick={handleConfirm} disabled={saving} className="btn-primary px-4 py-2 text-sm font-semibold rounded-lg disabled:opacity-60">
-            {saving ? 'Saving…' : 'Mark Completed'}
+            {saving ? 'Saving…' : isCorrection ? 'Save Changes' : 'Mark Completed'}
           </button>
         </div>
       </div>
