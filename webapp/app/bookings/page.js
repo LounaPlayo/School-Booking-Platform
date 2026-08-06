@@ -183,7 +183,7 @@ export default function BookingsPage() {
                     <th className="px-5 py-3 font-semibold text-right">Total Amount</th>
                     <th className="px-5 py-3 font-semibold">Deposit</th>
                     <th className="px-5 py-3 font-semibold text-right">Cash</th>
-                    <th className="px-5 py-3 font-semibold text-right">Wish</th>
+                    <th className="px-5 py-3 font-semibold text-right">Whish</th>
                     <th className="px-5 py-3 font-semibold text-right">Bank</th>
                     <th className="px-5 py-3 font-semibold"></th>
                   </tr>

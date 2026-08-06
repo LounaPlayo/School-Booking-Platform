@@ -77,7 +77,7 @@ export default function DashboardPage() {
       if (b.deposit_date && b.deposit_date.slice(0, 7) === cashFlowMonth) {
         const amt = parseFloat(b.deposit_amount_received) || 0;
         if (b.payment_method === 'Cash') cash += amt;
-        else if (b.payment_method === 'Wish') wish += amt;
+        else if (b.payment_method === 'Whish') wish += amt;
         else if (b.payment_method === 'Bank') bank += amt;
       }
       // Final settlement money-in, attributed to its own settlement month
@@ -91,7 +91,7 @@ export default function DashboardPage() {
   }, [scoped, cashFlowMonth]);
   const cashFlowChartData = [
     { method: 'Cash', amount: cashFlow.cash },
-    { method: 'Wish', amount: cashFlow.wish },
+    { method: 'Whish', amount: cashFlow.wish },
     { method: 'Bank', amount: cashFlow.bank },
   ];
 
@@ -179,7 +179,7 @@ export default function DashboardPage() {
                   <div className="font-display text-xl font-bold">${cashFlow.cash.toFixed(2)}</div>
                 </div>
                 <div className="rounded-xl p-4 chip-indigo">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-1 opacity-80"><Smartphone size={13} /> Wish</div>
+                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide mb-1 opacity-80"><Smartphone size={13} /> Whish</div>
                   <div className="font-display text-xl font-bold">${cashFlow.wish.toFixed(2)}</div>
                 </div>
                 <div className="rounded-xl p-4 chip-sky">

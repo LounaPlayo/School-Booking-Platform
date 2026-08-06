@@ -1,0 +1,48 @@
+'use client';
+
+import { COUNTRY_CODES } from '../lib/constants';
+
+function parsePhone(value) {
+  if (!value) return { code: '+961', number: '' };
+  const match = COUNTRY_CODES.find((c) => value.startsWith(c.code + ' '));
+  if (match) return { code: match.code, number: value.slice(match.code.length + 1) };
+  return { code: '+961', number: value };
+}
+
+// Stores/returns a single combined string like "+961 71 234 567" via
+// value/onChange - the country code and local number are just how it's
+// presented and edited.
+export default function PhoneInput({ value, onChange, disabled }) {
+  const { code, number } = parsePhone(value);
+
+  function handleCodeChange(newCode) {
+    onChange(`${newCode} ${number}`.trim());
+  }
+  function handleNumberChange(newNumber) {
+    onChange(`${code} ${newNumber}`.trim());
+  }
+
+  return (
+    <div className="flex gap-1.5">
+      <select
+        className="focus-ring text-sm border border-slate-200 rounded-lg px-1.5 disabled:bg-slate-50 disabled:text-slate-400"
+        style={{ maxWidth: '84px' }}
+        value={code}
+        onChange={(e) => handleCodeChange(e.target.value)}
+        disabled={disabled}
+      >
+        {COUNTRY_CODES.map((c) => (
+          <option key={c.code} value={c.code}>{c.code}</option>
+        ))}
+      </select>
+      <input
+        type="tel"
+        className="focus-ring flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50 disabled:text-slate-400"
+        value={number}
+        onChange={(e) => handleNumberChange(e.target.value)}
+        disabled={disabled}
+        placeholder="71 234 567"
+      />
+    </div>
+  );
+}

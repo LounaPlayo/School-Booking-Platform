@@ -50,7 +50,7 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
             <div className="flex-1"><DualCurrencyInput value={cash} onChange={setCash} /></div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600 w-12 shrink-0">Wish</span>
+            <span className="text-sm text-slate-600 w-12 shrink-0">Whish</span>
             <div className="flex-1"><DualCurrencyInput value={wish} onChange={setWish} /></div>
           </div>
           <div className="flex items-center gap-2">

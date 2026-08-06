@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Lock, ShieldCheck } from 'lucide-react';
 import DualCurrencyInput from './DualCurrencyInput';
+import PhoneInput from './PhoneInput';
 import {
   VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES, PAYMENT_METHODS, ADD_ON_FOOD_OPTIONS,
   isStatusLocked, balanceDue, grandTotal,
@@ -139,7 +140,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
               <input className={inputCls} value={b.school_name || ''} onChange={(e) => set('school_name', e.target.value)} placeholder="e.g. Kids World Nursery" disabled={formLocked} />
             </Field>
             <Field label="Contact Person"><input className={inputCls} value={b.contact_person || ''} onChange={(e) => set('contact_person', e.target.value)} disabled={formLocked} /></Field>
-            <Field label="Phone"><input className={inputCls} value={b.phone || ''} onChange={(e) => set('phone', e.target.value)} disabled={formLocked} /></Field>
+            <Field label="Phone"><PhoneInput value={b.phone || ''} onChange={(v) => set('phone', v)} disabled={formLocked} /></Field>
             <Field label="Email" span><input className={inputCls} value={b.email || ''} onChange={(e) => set('email', e.target.value)} disabled={formLocked} /></Field>
           </Section>
 
