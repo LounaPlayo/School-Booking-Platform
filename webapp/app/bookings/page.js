@@ -28,7 +28,7 @@ export default function BookingsPage() {
   async function loadAll() {
     setLoading(true);
     const [{ data: b }, { data: profiles }, { data: rates }] = await Promise.all([
-      supabase.from('bookings').select('*').order('event_date', { ascending: true }),
+      supabase.from('bookings').select('*').order('serial_number', { ascending: false }),
       supabase.from('profiles').select('id, name'),
       supabase.from('package_rates').select('*').order('package_name'),
     ]);

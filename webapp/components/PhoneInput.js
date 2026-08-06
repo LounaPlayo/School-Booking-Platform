@@ -19,7 +19,9 @@ export default function PhoneInput({ value, onChange, disabled }) {
     onChange(`${newCode} ${number}`.trim());
   }
   function handleNumberChange(newNumber) {
-    onChange(`${code} ${newNumber}`.trim());
+    // Digits only - no dashes, slashes, spaces, or anything else.
+    const digitsOnly = newNumber.replace(/\D/g, '');
+    onChange(`${code} ${digitsOnly}`.trim());
   }
 
   return (
@@ -42,7 +44,7 @@ export default function PhoneInput({ value, onChange, disabled }) {
         value={number}
         onChange={(e) => handleNumberChange(e.target.value)}
         disabled={disabled}
-        placeholder="71 234 567"
+        placeholder="71234567"
       />
     </div>
   );
