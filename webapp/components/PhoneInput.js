@@ -26,13 +26,13 @@ export default function PhoneInput({ value, onChange, disabled }) {
     <div className="flex gap-1.5">
       <select
         className="focus-ring text-sm border border-slate-200 rounded-lg px-1.5 disabled:bg-slate-50 disabled:text-slate-400"
-        style={{ maxWidth: '84px' }}
+        style={{ maxWidth: '190px' }}
         value={code}
         onChange={(e) => handleCodeChange(e.target.value)}
         disabled={disabled}
       >
         {COUNTRY_CODES.map((c) => (
-          <option key={c.code} value={c.code}>{c.code}</option>
+          <option key={c.code + c.name} value={c.code}>{c.name} ({c.code})</option>
         ))}
       </select>
       <input
