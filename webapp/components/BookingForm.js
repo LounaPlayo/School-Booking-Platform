@@ -245,7 +245,6 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
               )}
             </Field>
             <Field label="Follow-up Date"><input type="date" className={inputCls} value={b.follow_up_date || ''} onChange={(e) => set('follow_up_date', e.target.value)} disabled={formLocked} /></Field>
-            <Field label="Team Assigned" span><input className={inputCls} value={b.team_assigned || ''} onChange={(e) => set('team_assigned', e.target.value)} disabled={formLocked} /></Field>
           </Section>
 
           <Section title="Notes">

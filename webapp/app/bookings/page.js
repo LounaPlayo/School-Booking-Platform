@@ -110,7 +110,7 @@ export default function BookingsPage() {
 
   const [completeTarget, setCompleteTarget] = useState(null);
 
-  async function confirmCompletion({ settled_cash, settled_wish, settled_bank, balance_settled_date }) {
+  async function confirmCompletion({ settled_cash, settled_wish, settled_bank, balance_settled_date, team_assigned, final_number_of_kids, total_price }) {
     setErrorMsg('');
     const { error } = await supabase
       .from('bookings')
@@ -120,6 +120,9 @@ export default function BookingsPage() {
         settled_wish,
         settled_bank,
         balance_settled_date,
+        team_assigned,
+        final_number_of_kids,
+        total_price,
         updated_by: profile.id,
       })
       .eq('id', completeTarget.id);

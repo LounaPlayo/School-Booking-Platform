@@ -3,19 +3,36 @@
 import { useState } from 'react';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import DualCurrencyInput from './DualCurrencyInput';
-import { totalBalance } from '../lib/constants';
 
 export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
   const isCorrection = booking.booking_status === 'Completed';
+  const tentativeKids = parseFloat(booking.number_of_students) || 0;
+  const originalTotalPrice = parseFloat(booking.total_price) || 0;
+  const addOnFee = parseFloat(booking.add_on_fee) || 0;
+  const depositReceived = parseFloat(booking.deposit_amount_received) || 0;
+  // The implied per-student rate from the original booking - works for
+  // Special Offer pricing too, since it's just total price / kids booked.
+  const perStudentRate = tentativeKids > 0 ? originalTotalPrice / tentativeKids : 0;
+
+  const [finalKids, setFinalKids] = useState(booking.final_number_of_kids ?? booking.number_of_students ?? '');
+  const [teamAssigned, setTeamAssigned] = useState(booking.team_assigned || '');
   const [cash, setCash] = useState(booking.settled_cash || '');
   const [wish, setWish] = useState(booking.settled_wish || '');
   const [bank, setBank] = useState(booking.settled_bank || '');
   const [date, setDate] = useState(booking.balance_settled_date || new Date().toISOString().slice(0, 10));
   const [saving, setSaving] = useState(false);
-  const due = totalBalance(booking);
+
+  const finalKidsNum = parseFloat(finalKids) || 0;
+  // Recalculate the actual total owed against the FINAL headcount, not
+  // the original tentative one - this is what "amount closed accordingly"
+  // means: fewer/more kids than booked changes what's actually owed.
+  const adjustedTotalPrice = Math.round(perStudentRate * finalKidsNum * 100) / 100;
+  const due = Math.max(adjustedTotalPrice + addOnFee - depositReceived, 0);
+
   const settled = (parseFloat(cash) || 0) + (parseFloat(wish) || 0) + (parseFloat(bank) || 0);
   const diff = Math.round((settled - due) * 100) / 100;
   const isShort = diff < 0;
+  const kidsChanged = tentativeKids > 0 && finalKidsNum !== tentativeKids;
 
   async function handleConfirm() {
     if (isShort) return; // blocked - guarded in the UI too, this is just a safety net
@@ -25,20 +42,48 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
       settled_wish: parseFloat(wish) || 0,
       settled_bank: parseFloat(bank) || 0,
       balance_settled_date: date,
+      team_assigned: teamAssigned,
+      final_number_of_kids: finalKidsNum,
+      total_price: adjustedTotalPrice, // keeps the DB's settlement math consistent with what's actually owed
     });
     setSaving(false);
   }
 
   return (
     <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4" onClick={onCancel}>
-      <div className="bg-white rounded-2xl w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl w-full max-w-sm p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: '#D4F7DA' }}>
           <CheckCircle2 size={18} style={{ color: '#166534' }} />
         </div>
         <h3 className="font-display font-bold text-slate-900 mb-1">{isCorrection ? 'Edit settlement' : 'Complete this booking'}</h3>
-        <p className="text-sm text-slate-500 mb-4">
-          {booking.school_name || 'This booking'} — balance due{' '}
-          <span className="font-semibold text-slate-700">${due.toFixed(2)}</span>
+        <p className="text-sm text-slate-500 mb-4">{booking.school_name || 'This booking'}</p>
+
+        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+          Final number of kids {tentativeKids > 0 && <span className="normal-case font-normal text-slate-400">(booked: {tentativeKids})</span>}
+        </label>
+        <input
+          type="number"
+          className="focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mb-1"
+          value={finalKids}
+          onChange={(e) => setFinalKids(e.target.value)}
+        />
+        {kidsChanged && (
+          <p className="text-[11px] text-amber-700 mb-3">
+            Differs from the {tentativeKids} booked - amount recalculated at ${perStudentRate.toFixed(2)}/kid.
+          </p>
+        )}
+        {!kidsChanged && <div className="mb-3" />}
+
+        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Team assigned</label>
+        <input
+          className="focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mb-4"
+          value={teamAssigned}
+          onChange={(e) => setTeamAssigned(e.target.value)}
+          placeholder="Names of staff who worked the event"
+        />
+
+        <p className="text-sm text-slate-500 mb-3">
+          Balance due <span className="font-semibold text-slate-700">${due.toFixed(2)}</span>
         </p>
 
         <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
