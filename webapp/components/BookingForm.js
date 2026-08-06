@@ -247,6 +247,19 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
             <Field label="Follow-up Date"><input type="date" className={inputCls} value={b.follow_up_date || ''} onChange={(e) => set('follow_up_date', e.target.value)} disabled={formLocked} /></Field>
           </Section>
 
+          {existing && (b.final_number_of_kids !== null && b.final_number_of_kids !== undefined || b.team_assigned) && (
+            <Section title="Event Completion (Reference)" tint="#F0FBF3">
+              <Field label="Booked (Tentative)"><input className={inputCls} value={b.number_of_students || '—'} disabled /></Field>
+              <Field label="Final Kids Present">
+                <input className={inputCls} value={b.final_number_of_kids ?? '—'} disabled />
+              </Field>
+              <Field label="Team Assigned" span><input className={inputCls} value={b.team_assigned || '—'} disabled /></Field>
+              <p className="text-[11px] text-slate-400 col-span-2 -mt-2">
+                Set when the booking was closed via &quot;Mark Completed&quot; - correct it there (or via &quot;Edit Settlement&quot;) if it needs to change.
+              </p>
+            </Section>
+          )}
+
           <Section title="Notes">
             <Field label="Special Requests / Notes" span><textarea className={inputCls} rows={2} value={b.notes || ''} onChange={(e) => set('notes', e.target.value)} disabled={formLocked} /></Field>
           </Section>
