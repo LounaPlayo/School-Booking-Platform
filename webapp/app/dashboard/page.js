@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { School, Clock, CheckCircle2, Users, AlertCircle, ChevronRight, Wallet, Banknote, Smartphone, Landmark } from 'lucide-react';
+import { School, Clock, CheckCircle2, CheckCheck, Users, AlertCircle, ChevronRight, Wallet, Banknote, Smartphone, Landmark } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import AppShell from '../../components/AppShell';
 import { useAuth } from '../../lib/AuthProvider';
@@ -121,17 +121,19 @@ export default function DashboardPage() {
           <div className="text-sm text-slate-400 py-24 text-center">Loading…</div>
         ) : (
           <div className="space-y-6">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <StatCard label="Total Bookings" value={stats.total} icon={School} chip="indigo" />
               <StatCard label="Tentative" value={stats.s['Tentative'] || 0} icon={Clock} chip="amber" />
               <StatCard label="Confirmed" value={stats.s['Confirmed'] || 0} icon={CheckCircle2} chip="sky" />
+              <StatCard label="Completed" value={stats.s['Completed'] || 0} icon={CheckCheck} chip="emerald" />
               <StatCard label="Students Booked" value={stats.students} icon={Users} chip="emerald" />
               <StatCard label="Follow-ups Due" value={stats.pendingFollowUps} icon={AlertCircle} chip="rose" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl border border-slate-200 p-6">
-                <h3 className="font-display font-semibold text-slate-900 mb-4">Status Breakdown</h3>
+                <h3 className="font-display font-semibold text-slate-900 mb-1">Status Breakdown</h3>
+                <p className="text-xs text-slate-400 mb-3">Every status, including Not Interested and Cancelled - not just the cards above.</p>
                 {pieData.length === 0 ? (
                   <div className="text-sm text-slate-400 py-12 text-center">No bookings yet</div>
                 ) : (
