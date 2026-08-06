@@ -26,14 +26,14 @@ export default function PhoneInput({ value, onChange, disabled }) {
     <div className="flex gap-1.5 w-full min-w-0">
       <select
         className="focus-ring text-sm border border-slate-200 rounded-lg pl-1.5 pr-0.5 shrink-0 disabled:bg-slate-50 disabled:text-slate-400"
-        style={{ width: '92px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
+        style={{ width: '118px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
         value={code}
         onChange={(e) => handleCodeChange(e.target.value)}
         disabled={disabled}
         title={COUNTRY_CODES.find((c) => c.code === code)?.name}
       >
         {COUNTRY_CODES.map((c) => (
-          <option key={c.code + c.name} value={c.code}>{c.name} ({c.code})</option>
+          <option key={c.code + c.name} value={c.code}>{c.code} {c.name}</option>
         ))}
       </select>
       <input
