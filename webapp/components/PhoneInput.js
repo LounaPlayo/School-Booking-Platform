@@ -23,13 +23,14 @@ export default function PhoneInput({ value, onChange, disabled }) {
   }
 
   return (
-    <div className="flex gap-1.5">
+    <div className="flex gap-1.5 w-full min-w-0">
       <select
-        className="focus-ring text-sm border border-slate-200 rounded-lg px-1.5 disabled:bg-slate-50 disabled:text-slate-400"
-        style={{ maxWidth: '190px' }}
+        className="focus-ring text-sm border border-slate-200 rounded-lg pl-1.5 pr-0.5 shrink-0 disabled:bg-slate-50 disabled:text-slate-400"
+        style={{ width: '92px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}
         value={code}
         onChange={(e) => handleCodeChange(e.target.value)}
         disabled={disabled}
+        title={COUNTRY_CODES.find((c) => c.code === code)?.name}
       >
         {COUNTRY_CODES.map((c) => (
           <option key={c.code + c.name} value={c.code}>{c.name} ({c.code})</option>
@@ -37,7 +38,7 @@ export default function PhoneInput({ value, onChange, disabled }) {
       </select>
       <input
         type="tel"
-        className="focus-ring flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50 disabled:text-slate-400"
+        className="focus-ring flex-1 min-w-0 px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50 disabled:text-slate-400"
         value={number}
         onChange={(e) => handleNumberChange(e.target.value)}
         disabled={disabled}
