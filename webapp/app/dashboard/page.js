@@ -45,13 +45,13 @@ export default function DashboardPage() {
   );
 
   const stats = useMemo(() => {
-    const s = { Tentative: 0, 'Deposit Pending': 0, Confirmed: 0, Completed: 0, 'Not Interested': 0, Cancelled: 0 };
+    const s = { Tentative: 0, Confirmed: 0, Completed: 0, 'Not Interested': 0, Cancelled: 0 };
     let students = 0, pendingFollowUps = 0;
     const today = new Date().toISOString().slice(0, 10);
     scoped.forEach((b) => {
       s[b.booking_status] = (s[b.booking_status] || 0) + 1;
       if (b.booking_status === 'Confirmed' || b.booking_status === 'Completed') students += parseFloat(b.number_of_students) || 0;
-      if ((b.booking_status === 'Tentative' || b.booking_status === 'Deposit Pending') && b.follow_up_date && b.follow_up_date <= today) pendingFollowUps++;
+      if (b.booking_status === 'Tentative' && b.follow_up_date && b.follow_up_date <= today) pendingFollowUps++;
     });
     return { s, students, pendingFollowUps, total: scoped.length };
   }, [scoped]);
@@ -66,7 +66,7 @@ export default function DashboardPage() {
 
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = scoped
-    .filter((b) => (b.booking_status === 'Tentative' || b.booking_status === 'Deposit Pending') && b.follow_up_date && b.follow_up_date <= today)
+    .filter((b) => b.booking_status === 'Tentative' && b.follow_up_date && b.follow_up_date <= today)
     .sort((a, b) => a.follow_up_date.localeCompare(b.follow_up_date))
     .slice(0, 6);
 
