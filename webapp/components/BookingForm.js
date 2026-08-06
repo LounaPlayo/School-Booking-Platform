@@ -31,6 +31,15 @@ function Section({ title, tint, children }) {
   );
 }
 
+function SummaryRow({ label, value, bold }) {
+  return (
+    <div className={`flex items-center justify-between py-1 ${bold ? 'font-semibold text-slate-900' : 'text-slate-600'}`}>
+      <span className="text-sm">{label}</span>
+      <span className="text-sm font-mono">${value.toFixed(2)}</span>
+    </div>
+  );
+}
+
 export default function BookingForm({ booking, existing, profile, packageRates, onCancel, onSave, onDeleteRequest, namesById }) {
   const [b, setB] = useState(booking);
   const [error, setError] = useState('');
@@ -254,7 +263,29 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
                 <input className={inputCls} value={b.final_number_of_kids ?? '—'} disabled />
               </Field>
               <Field label="Team Assigned" span><input className={inputCls} value={b.team_assigned || '—'} disabled /></Field>
-              <p className="text-[11px] text-slate-400 col-span-2 -mt-2">
+
+              <div className="col-span-2 mt-2 pt-3 border-t border-emerald-200">
+                <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Accounting Summary</h5>
+                <SummaryRow label="Package Total" value={parseFloat(b.total_price) || 0} />
+                {parseFloat(b.add_on_fee) > 0 && (
+                  <SummaryRow label={`Add-On${b.add_on_food && b.add_on_food !== 'None' ? ` (${b.add_on_food})` : ''}`} value={parseFloat(b.add_on_fee) || 0} />
+                )}
+                <div className="border-t border-slate-200 my-1.5" />
+                <SummaryRow label="Grand Total" value={grandTotal(b)} bold />
+                <div className="border-t border-slate-200 my-1.5" />
+                <SummaryRow label={`Deposit Paid${b.payment_method ? ` (${b.payment_method})` : ''}`} value={parseFloat(b.deposit_amount_received) || 0} />
+                {parseFloat(b.settled_cash) > 0 && <SummaryRow label="Settled - Cash" value={parseFloat(b.settled_cash) || 0} />}
+                {parseFloat(b.settled_wish) > 0 && <SummaryRow label="Settled - Whish" value={parseFloat(b.settled_wish) || 0} />}
+                {parseFloat(b.settled_bank) > 0 && <SummaryRow label="Settled - Bank" value={parseFloat(b.settled_bank) || 0} />}
+                <div className="border-t border-slate-300 my-1.5" />
+                <SummaryRow
+                  label="Total Collected"
+                  value={(parseFloat(b.deposit_amount_received) || 0) + (parseFloat(b.settled_cash) || 0) + (parseFloat(b.settled_wish) || 0) + (parseFloat(b.settled_bank) || 0)}
+                  bold
+                />
+              </div>
+
+              <p className="text-[11px] text-slate-400 col-span-2 mt-2">
                 Set when the booking was closed via &quot;Mark Completed&quot; - correct it there (or via &quot;Edit Settlement&quot;) if it needs to change.
               </p>
             </Section>
