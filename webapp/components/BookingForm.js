@@ -54,7 +54,10 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
   const depositLocked = formLocked;
   const overriding = existing && isStatusLocked(booking) && isApprover;
   const rateMap = Object.fromEntries((packageRates || []).map((r) => [r.package_name, r.rate]));
-  const packageOptions = [...(packageRates || []).map((r) => r.package_name), 'Special Offer'];
+  const packageOptions = [
+    ...(packageRates || []).map((r) => r.package_name),
+    ...(isApprover || b.package_selected === 'Special Offer' ? ['Special Offer'] : []),
+  ];
   const isSpecialOffer = b.package_selected === 'Special Offer';
   const depositMandatory = b.booking_status === 'Confirmed' || b.booking_status === 'Completed';
 
