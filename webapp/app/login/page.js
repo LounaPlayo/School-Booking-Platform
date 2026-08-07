@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
@@ -47,6 +48,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl border border-slate-200 w-full max-w-sm p-7">
+        <div className="flex items-center gap-3 mb-5">
+          <Image src="/logos/playo.png" alt="Playo" width={70} height={30} style={{ objectFit: 'contain', height: '30px', width: 'auto' }} />
+          <Image src="/logos/louna.png" alt="Louna Land (Oh Chateau)" width={60} height={30} style={{ objectFit: 'contain', height: '30px', width: 'auto' }} />
+        </div>
         <div className="w-10 h-10 rounded-lg bg-navy flex items-center justify-center mb-4">
           <ShieldCheck size={18} className="text-white" />
         </div>

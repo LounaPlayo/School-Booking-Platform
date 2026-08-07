@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { TrendingUp, School, Users, LogOut, Calendar, DollarSign } from 'lucide-react';
 import { useAuth } from '../lib/AuthProvider';
@@ -36,7 +37,15 @@ export default function AppShell({ children }) {
     <div className="min-h-screen flex">
       <aside className="w-60 bg-navy text-white flex flex-col shrink-0">
         <div className="px-6 py-6 border-b border-white/10">
-          <div className="font-display text-lg font-bold tracking-tight">Booking Control</div>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="bg-white/95 rounded-lg p-1.5 flex items-center justify-center" style={{ height: '34px' }}>
+              <Image src="/logos/playo.png" alt="Playo" width={60} height={26} style={{ objectFit: 'contain', height: '26px', width: 'auto' }} />
+            </div>
+            <div className="bg-white/95 rounded-lg p-1.5 flex items-center justify-center" style={{ height: '34px' }}>
+              <Image src="/logos/louna.png" alt="Louna Land (Oh Chateau)" width={50} height={26} style={{ objectFit: 'contain', height: '26px', width: 'auto' }} />
+            </div>
+          </div>
+          <div className="font-display text-sm font-bold tracking-tight mt-2">Booking Control</div>
           <div className="text-xs text-white/50 mt-0.5">School Events</div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">

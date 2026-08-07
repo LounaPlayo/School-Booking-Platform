@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { Plus, X, Lock, Search } from 'lucide-react';
 import AppShell from '../../components/AppShell';
 import BookingForm from '../../components/BookingForm';
@@ -200,7 +201,18 @@ export default function BookingsPage() {
                         <td className="px-5 py-3.5">
                           <div className="font-medium text-slate-900">{b.school_name || <span className="text-slate-400 italic">Unnamed</span>}</div>
                         </td>
-                        <td className="px-5 py-3.5 text-slate-600">{b.venue}</td>
+                        <td className="px-5 py-3.5 text-slate-600">
+                          <div className="flex items-center gap-1.5">
+                            <Image
+                              src={b.venue === 'Playo' ? '/logos/playo.png' : '/logos/louna.png'}
+                              alt=""
+                              width={18}
+                              height={18}
+                              style={{ objectFit: 'contain', height: '18px', width: '18px' }}
+                            />
+                            {b.venue}
+                          </div>
+                        </td>
                         <td className="px-5 py-3.5 text-slate-600">{b.event_date || '—'}</td>
                         <td className="px-5 py-3.5"><StatusPill status={b.booking_status} /></td>
                         <td className="px-5 py-3.5 text-right font-mono text-xs font-semibold text-slate-800">{grandTotal(b) ? grandTotal(b).toFixed(2) : '—'}</td>
