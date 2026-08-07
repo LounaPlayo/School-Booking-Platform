@@ -60,6 +60,11 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
   ];
   const isSpecialOffer = b.package_selected === 'Special Offer';
   const depositMandatory = b.booking_status === 'Confirmed' || b.booking_status === 'Completed';
+  // The actual deposit details (amount/date/method) are only required
+  // if a deposit is actually expected - "Not Requested" means there's
+  // legitimately nothing to fill in, and the booking can still be
+  // Confirmed without one.
+  const depositDetailsMandatory = depositMandatory && b.deposit_status !== 'Not Requested';
 
   function set(k, v) {
     setB((prev) => {
@@ -113,16 +118,20 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
     if (!b.grade_level?.trim()) { setError('Grade Level / Age is required.'); return; }
     if (!b.number_of_students || parseFloat(b.number_of_students) <= 0) { setError('# Students is required.'); return; }
 
-    // Deposit & Payment - mandatory only once the booking is Confirmed/Completed,
-    // since that's the point the deposit is supposed to already be in hand.
+    // Deposit & Payment - Deposit Status must be set once Confirmed/Completed
+    // (even if that's "Not Requested" - some events genuinely need no
+    // deposit). The actual amount/date/method are only required if a
+    // deposit is actually expected.
     if (willBeConfirmed) {
       if (!b.deposit_status) { setError('Deposit Status is required once a booking is Confirmed.'); return; }
-      if (!b.deposit_amount_received || parseFloat(b.deposit_amount_received) <= 0) {
-        setError('Deposit Amount Received is required once a booking is Confirmed.');
-        return;
+      if (b.deposit_status !== 'Not Requested') {
+        if (!b.deposit_amount_received || parseFloat(b.deposit_amount_received) <= 0) {
+          setError('Deposit Amount Received is required since a deposit is expected on this booking.');
+          return;
+        }
+        if (!b.deposit_date) { setError('Deposit Date is required since a deposit is expected on this booking.'); return; }
+        if (!b.payment_method) { setError('Payment Method is required since a deposit is expected on this booking.'); return; }
       }
-      if (!b.deposit_date) { setError('Deposit Date is required once a booking is Confirmed.'); return; }
-      if (!b.payment_method) { setError('Payment Method is required once a booking is Confirmed.'); return; }
     }
 
     setError('');
@@ -230,11 +239,11 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
                 {DEPOSIT_STATUSES.map((v) => <option key={v}>{v}</option>)}
               </select>
             </Field>
-            <Field label="Deposit Amount Received ($)" required={depositMandatory}>
+            <Field label="Deposit Amount Received ($)" required={depositDetailsMandatory}>
               <DualCurrencyInput value={b.deposit_amount_received || ''} onChange={(v) => set('deposit_amount_received', v)} disabled={depositLocked} />
             </Field>
-            <Field label="Deposit Date" required={depositMandatory}><input type="date" className={inputCls} value={b.deposit_date || ''} onChange={(e) => set('deposit_date', e.target.value)} disabled={depositLocked} /></Field>
-            <Field label="Payment Method" required={depositMandatory}>
+            <Field label="Deposit Date" required={depositDetailsMandatory}><input type="date" className={inputCls} value={b.deposit_date || ''} onChange={(e) => set('deposit_date', e.target.value)} disabled={depositLocked} /></Field>
+            <Field label="Payment Method" required={depositDetailsMandatory}>
               <select className={inputCls} value={b.payment_method || ''} onChange={(e) => set('payment_method', e.target.value)} disabled={depositLocked}>
                 <option value="">Select method</option>
                 {PAYMENT_METHODS.map((v) => <option key={v}>{v}</option>)}
