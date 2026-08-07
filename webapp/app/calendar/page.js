@@ -31,7 +31,7 @@ export default function CalendarPage() {
     supabase
       .from('bookings')
       .select('*')
-      .in('booking_status', ['Confirmed', 'Tentative'])
+      .in('booking_status', ['Confirmed', 'Tentative', 'Completed'])
       .then(({ data }) => {
         setBookings(data || []);
         setLoading(false);
@@ -66,7 +66,7 @@ export default function CalendarPage() {
       <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between">
         <div>
           <h1 className="font-display text-xl font-bold text-slate-900">Calendar</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Confirmed and Tentative bookings by date</p>
+          <p className="text-sm text-slate-500 mt-0.5">Confirmed, Tentative, and Completed bookings by date</p>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={() => setCursor(new Date(year, month - 1, 1))} className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
@@ -132,6 +132,7 @@ export default function CalendarPage() {
               <div className="flex items-center gap-4 mb-4 text-xs">
                 <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS['Confirmed'].dot }} />Confirmed</span>
                 <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS['Tentative'].dot }} />Tentative</span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS['Completed'].dot }} />Completed</span>
               </div>
               <h3 className="font-display font-semibold text-slate-900 mb-3">
                 {selectedDay ? new Date(selectedDay).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : 'Select a day'}
@@ -139,7 +140,7 @@ export default function CalendarPage() {
               {!selectedDay ? (
                 <p className="text-sm text-slate-400">Click any date to see its bookings.</p>
               ) : selectedList.length === 0 ? (
-                <p className="text-sm text-slate-400">No confirmed or tentative bookings on this day.</p>
+                <p className="text-sm text-slate-400">No bookings on this day.</p>
               ) : (
                 <div className="space-y-3">
                   {selectedList.map((b) => (
