@@ -30,6 +30,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [venueFilter, setVenueFilter] = useState('Both');
   const [cashFlowMonth, setCashFlowMonth] = useState(new Date().toISOString().slice(0, 7)); // "YYYY-MM"
+  const [summaryPeriodType, setSummaryPeriodType] = useState('Month'); // 'Month' | 'Year'
+  const [summaryMonth, setSummaryMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [summaryYear, setSummaryYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     if (!profile) return;
@@ -69,6 +72,35 @@ export default function DashboardPage() {
     .filter((b) => b.booking_status === 'Tentative' && b.follow_up_date && b.follow_up_date <= today)
     .sort((a, b) => a.follow_up_date.localeCompare(b.follow_up_date))
     .slice(0, 6);
+
+  const bookingsSummary = useMemo(() => {
+    const matchesPeriod = (b) => {
+      if (!b.event_date) return false;
+      return summaryPeriodType === 'Month'
+        ? b.event_date.slice(0, 7) === summaryMonth
+        : b.event_date.slice(0, 4) === String(summaryYear);
+    };
+    const perVenue = {};
+    VENUES.forEach((v) => {
+      const rows = scoped.filter((b) => b.venue === v && matchesPeriod(b));
+      const confirmed = rows.filter((b) => b.booking_status === 'Confirmed' || b.booking_status === 'Completed').length;
+      const completed = rows.filter((b) => b.booking_status === 'Completed').length;
+      const students = rows.reduce((sum, b) => {
+        if (b.booking_status !== 'Confirmed' && b.booking_status !== 'Completed') return sum;
+        const count = b.final_number_of_kids ?? b.number_of_students;
+        return sum + (parseFloat(count) || 0);
+      }, 0);
+      perVenue[v] = { total: rows.length, confirmed, completed, students };
+    });
+    return perVenue;
+  }, [scoped, summaryPeriodType, summaryMonth, summaryYear]);
+  const summaryChartData = VENUES.map((v) => ({
+    venue: v,
+    Total: bookingsSummary[v]?.total || 0,
+    Confirmed: bookingsSummary[v]?.confirmed || 0,
+    Completed: bookingsSummary[v]?.completed || 0,
+  }));
+  const yearOptions = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 3 + i);
 
   const cashFlow = useMemo(() => {
     let cash = 0, wish = 0, bank = 0;
@@ -160,6 +192,88 @@ export default function DashboardPage() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <School size={16} className="text-slate-500" />
+                  <h3 className="font-display font-semibold text-slate-900">Bookings Summary</h3>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50">
+                    {['Month', 'Year'].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setSummaryPeriodType(t)}
+                        className={`px-3 py-1 rounded-md text-sm font-medium transition ${
+                          summaryPeriodType === t ? 'bg-white shadow-sm text-navy' : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                  {summaryPeriodType === 'Month' ? (
+                    <input
+                      type="month"
+                      value={summaryMonth}
+                      onChange={(e) => setSummaryMonth(e.target.value)}
+                      className="focus-ring text-sm border border-slate-200 rounded-lg px-3 py-1.5"
+                    />
+                  ) : (
+                    <select
+                      value={summaryYear}
+                      onChange={(e) => setSummaryYear(Number(e.target.value))}
+                      className="focus-ring text-sm border border-slate-200 rounded-lg px-3 py-1.5"
+                    >
+                      {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                {VENUES.map((v) => (
+                  <div key={v} className="rounded-xl border border-slate-100 p-4">
+                    <div className="text-sm font-semibold text-slate-800 mb-3">{v}</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Total</div>
+                        <div className="font-display text-lg font-bold text-slate-900">{bookingsSummary[v]?.total || 0}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Confirmed</div>
+                        <div className="font-display text-lg font-bold text-slate-900">{bookingsSummary[v]?.confirmed || 0}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Completed</div>
+                        <div className="font-display text-lg font-bold text-slate-900">{bookingsSummary[v]?.completed || 0}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Students</div>
+                        <div className="font-display text-lg font-bold text-slate-900">{bookingsSummary[v]?.students || 0}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {summaryChartData.every((d) => d.Total === 0) ? (
+                <div className="text-sm text-slate-400 py-6 text-center">No bookings for this {summaryPeriodType === 'Month' ? 'month' : 'year'} yet.</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={summaryChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                    <XAxis dataKey="venue" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                    <Tooltip />
+                    <Bar dataKey="Total" fill="#FFC933" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Confirmed" fill="#6D28D9" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Completed" fill="#3DD968" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 p-6">
