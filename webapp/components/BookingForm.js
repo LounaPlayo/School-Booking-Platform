@@ -6,7 +6,7 @@ import DualCurrencyInput from './DualCurrencyInput';
 import PhoneInput from './PhoneInput';
 import {
   VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES, PAYMENT_METHODS, ADD_ON_FOOD_OPTIONS,
-  isStatusLocked, balanceDue, grandTotal,
+  isStatusLocked, isDepositLocked, balanceDue, grandTotal,
 } from '../lib/constants';
 
 const inputCls = 'focus-ring w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50 disabled:text-slate-400';
@@ -51,7 +51,10 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
   // out, not to limit Approvers.
   const formLocked = existing && isStatusLocked(booking) && !isApprover;
   const statusLocked = formLocked;
-  const depositLocked = formLocked;
+  // Deposit fields stay editable even on a Confirmed booking, as long
+  // as the deposit hasn't actually been marked Received yet - lets a
+  // late-arriving deposit be recorded without needing an approver.
+  const depositLocked = existing && isDepositLocked(booking) && !isApprover;
   const overriding = existing && isStatusLocked(booking) && isApprover;
   const rateMap = Object.fromEntries((packageRates || []).map((r) => [r.package_name, r.rate]));
   const packageOptions = [
@@ -64,7 +67,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
   // if a deposit is actually expected - "Not Requested" means there's
   // legitimately nothing to fill in, and the booking can still be
   // Confirmed without one.
-  const depositDetailsMandatory = depositMandatory && b.deposit_status !== 'Not Requested';
+  const depositDetailsMandatory = depositMandatory && b.deposit_status !== 'Not Required';
 
   function set(k, v) {
     setB((prev) => {
@@ -124,7 +127,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
     // deposit is actually expected.
     if (willBeConfirmed) {
       if (!b.deposit_status) { setError('Deposit Status is required once a booking is Confirmed.'); return; }
-      if (b.deposit_status !== 'Not Requested') {
+      if (b.deposit_status !== 'Not Required') {
         if (!b.deposit_amount_received || parseFloat(b.deposit_amount_received) <= 0) {
           setError('Deposit Amount Received is required since a deposit is expected on this booking.');
           return;
@@ -150,7 +153,12 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
           <button onClick={onCancel} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
         </div>
 
-        {formLocked && (
+        {formLocked && !depositLocked && (
+          <div className="mx-6 mt-4 seal-banner border text-sm px-4 py-3 rounded-lg flex items-center gap-2">
+            <Lock size={15} /> This booking is Confirmed. Only an approver can edit most of it - but Deposit &amp; Payment stays open until a deposit is actually marked Received, in case one comes in late.
+          </div>
+        )}
+        {formLocked && depositLocked && (
           <div className="mx-6 mt-4 seal-banner border text-sm px-4 py-3 rounded-lg flex items-center gap-2">
             <Lock size={15} /> This booking is Confirmed. Only an approver can edit or delete it here - to close the final settlement, use &quot;Mark Completed&quot; on the bookings list instead.
           </div>

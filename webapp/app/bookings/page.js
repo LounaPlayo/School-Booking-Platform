@@ -48,7 +48,7 @@ export default function BookingsPage() {
       event_date: '', event_time: '', event_type: 'School Trip / Field Visit',
       grade_level: '', number_of_students: '',
       package_selected: 'Package A', total_price: '',
-      deposit_status: 'Not Requested', deposit_amount_received: '', deposit_date: '', payment_method: '',
+      deposit_status: 'Not Required', deposit_amount_received: '', deposit_date: '', payment_method: '',
       add_on_food: 'None', add_on_fee: '',
       booking_status: 'Tentative', team_assigned: '',
       settled_cash: '', settled_wish: '', settled_bank: '',

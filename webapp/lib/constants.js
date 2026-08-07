@@ -11,7 +11,7 @@ export const EVENT_TIMES = ['09:00 - 11:00', '10:00 - 11:30', '10:00 - 12:00', '
 // Packages and their rates now live in the package_rates table (managed
 // from the Pricing tab), not here - see components/BookingForm.js.
 export const STATUS_ALL = ['Tentative', 'Confirmed', 'Completed', 'Not Interested', 'Cancelled'];
-export const DEPOSIT_STATUSES = ['Not Requested', 'Requested', 'Partial', 'Received'];
+export const DEPOSIT_STATUSES = ['Not Required', 'Required', 'Partial', 'Received'];
 export const PAYMENT_METHODS = ['Cash', 'Whish', 'Bank'];
 export const ADD_ON_FOOD_OPTIONS = ['None', 'Mc Do', 'Man2ouche'];
 // Full ITU E.164 country calling code list, sorted alphabetically by
