@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { TrendingUp, School, Users, LogOut, Calendar, DollarSign } from 'lucide-react';
+import { TrendingUp, School, Users, LogOut, Calendar, DollarSign, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '../lib/AuthProvider';
 
 export default function AppShell({ children }) {
@@ -27,6 +27,7 @@ export default function AppShell({ children }) {
     { href: '/dashboard', label: 'Dashboard', icon: TrendingUp },
     { href: '/bookings', label: 'Bookings', icon: School },
     { href: '/calendar', label: 'Calendar', icon: Calendar },
+    { href: '/reports', label: 'Reports', icon: FileSpreadsheet },
   ];
   if (profile.role === 'approver') {
     nav.push({ href: '/team', label: 'Team', icon: Users });
