@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { TrendingUp, School, Users, LogOut, Calendar, DollarSign, FileSpreadsheet } from 'lucide-react';
+import { TrendingUp, School, Users, Users2, LogOut, Calendar, DollarSign, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '../lib/AuthProvider';
 
 export default function AppShell({ children }) {
@@ -26,6 +26,7 @@ export default function AppShell({ children }) {
   const nav = [
     { href: '/dashboard', label: 'Dashboard', icon: TrendingUp },
     { href: '/bookings', label: 'Bookings', icon: School },
+    { href: '/clients', label: 'Clients', icon: Users2 },
     { href: '/calendar', label: 'Calendar', icon: Calendar },
     { href: '/reports', label: 'Reports', icon: FileSpreadsheet },
   ];

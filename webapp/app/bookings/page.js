@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Suspense } from 'react';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import { Plus, X, Lock, Search } from 'lucide-react';
 import AppShell from '../../components/AppShell';
 import BookingForm from '../../components/BookingForm';
@@ -12,15 +13,17 @@ import { useAuth } from '../../lib/AuthProvider';
 import { supabase } from '../../lib/supabaseClient';
 import { VENUES, STATUS_ALL, cashTotal, wishTotal, bankTotal, grandTotal } from '../../lib/constants';
 
-export default function BookingsPage() {
+function BookingsPageInner() {
   const { profile } = useAuth();
+  const searchParams = useSearchParams();
   const [bookings, setBookings] = useState([]);
   const [namesById, setNamesById] = useState({});
   const [packageRates, setPackageRates] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [venueFilter, setVenueFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(searchParams.get('search') || '');
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -28,16 +31,18 @@ export default function BookingsPage() {
 
   async function loadAll() {
     setLoading(true);
-    const [{ data: b }, { data: profiles }, { data: rates }] = await Promise.all([
+    const [{ data: b }, { data: profiles }, { data: rates }, { data: clientList }] = await Promise.all([
       supabase.from('bookings').select('*').order('serial_number', { ascending: false }),
       supabase.from('profiles').select('id, name'),
       supabase.from('package_rates').select('*').order('package_name'),
+      supabase.from('clients').select('*').order('name'),
     ]);
     setBookings(b || []);
     const map = {};
     (profiles || []).forEach((p) => { map[p.id] = p.name; });
     setNamesById(map);
     setPackageRates(rates || []);
+    setClients(clientList || []);
     setLoading(false);
   }
 
@@ -45,7 +50,7 @@ export default function BookingsPage() {
 
   function emptyBooking() {
     return {
-      venue: 'Playo', school_name: '', contact_person: '', phone: '', email: '',
+      venue: 'Playo', school_name: '', contact_person: '', phone: '', email: '', client_id: null,
       event_date: '', event_time: '', event_type: 'School Trip / Field Visit',
       grade_level: '', number_of_students: '',
       package_selected: 'Package A', total_price: '',
@@ -72,11 +77,46 @@ export default function BookingsPage() {
   function openNew() { setEditing(emptyBooking()); setShowForm(true); }
   function openEdit(b) { setEditing({ ...b }); setShowForm(true); }
 
+  async function resolveClientId(b) {
+    if (!b.school_name?.trim()) return null;
+
+    // Already linked to a client (picked from the list, or an existing
+    // booking that was already linked) - just keep the client's contact
+    // info current with whatever's on the booking now.
+    if (b.client_id) {
+      await supabase.from('clients').update({
+        contact_person: b.contact_person || null,
+        phone: b.phone || null,
+        email: b.email || null,
+        updated_at: new Date().toISOString(),
+      }).eq('id', b.client_id);
+      return b.client_id;
+    }
+
+    // No client linked yet - check for an exact name match first (in case
+    // this is actually a returning client typed fresh), otherwise create
+    // a brand-new client record.
+    const existing = clients.find((c) => c.name.toLowerCase() === b.school_name.trim().toLowerCase());
+    if (existing) return existing.id;
+
+    const { data, error } = await supabase.from('clients').insert({
+      name: b.school_name.trim(),
+      contact_person: b.contact_person || null,
+      phone: b.phone || null,
+      email: b.email || null,
+      created_by: profile.id,
+    }).select('id').single();
+
+    if (error) { setErrorMsg(`Could not save client: ${error.message}`); return null; }
+    return data.id;
+  }
+
   async function saveBooking(rawB) {
     setErrorMsg('');
     const b = sanitize(rawB);
+    const clientId = await resolveClientId(b);
     const wasLockedBefore = b.id ? bookings.find((x) => x.id === b.id) : null;
-    const payload = { ...b, updated_by: profile.id };
+    const payload = { ...b, client_id: clientId, updated_by: profile.id };
     if (b.booking_status === 'Confirmed' || b.booking_status === 'Completed') {
       if (!wasLockedBefore || !(wasLockedBefore.booking_status === 'Confirmed' || wasLockedBefore.booking_status === 'Completed')) {
         payload.approved_by = profile.id;
@@ -256,6 +296,7 @@ export default function BookingsPage() {
           profile={profile}
           namesById={namesById}
           packageRates={packageRates}
+          clients={clients}
           onCancel={() => { setShowForm(false); setEditing(null); }}
           onSave={saveBooking}
           onDeleteRequest={(b) => { setShowForm(false); setDeleteConfirm(b); }}
@@ -268,5 +309,13 @@ export default function BookingsPage() {
         <CompleteBookingModal booking={completeTarget} onCancel={() => setCompleteTarget(null)} onConfirm={confirmCompletion} />
       )}
     </AppShell>
+  );
+}
+
+export default function BookingsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-400">Loading…</div>}>
+      <BookingsPageInner />
+    </Suspense>
   );
 }

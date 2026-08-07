@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { X, Lock, ShieldCheck } from 'lucide-react';
 import DualCurrencyInput from './DualCurrencyInput';
 import PhoneInput from './PhoneInput';
+import ClientPicker from './ClientPicker';
 import {
   VENUES, EVENT_TYPES, EVENT_TIMES, STATUS_ALL, DEPOSIT_STATUSES, PAYMENT_METHODS, ADD_ON_FOOD_OPTIONS,
   isStatusLocked, isDepositLocked, balanceDue, grandTotal,
@@ -40,7 +41,7 @@ function SummaryRow({ label, value, bold }) {
   );
 }
 
-export default function BookingForm({ booking, existing, profile, packageRates, onCancel, onSave, onDeleteRequest, namesById }) {
+export default function BookingForm({ booking, existing, profile, packageRates, clients, onCancel, onSave, onDeleteRequest, namesById }) {
   const [b, setB] = useState(booking);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -189,7 +190,22 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
               </select>
             </Field>
             <Field label="School / Nursery Name" span required>
-              <input className={inputCls} value={b.school_name || ''} onChange={(e) => set('school_name', e.target.value)} placeholder="e.g. Kids World Nursery" disabled={formLocked} />
+              <ClientPicker
+                clients={clients || []}
+                value={b.school_name || ''}
+                onChangeName={(v) => setB((prev) => ({ ...prev, school_name: v, client_id: null }))}
+                onSelectClient={(c) => {
+                  setB((prev) => ({
+                    ...prev,
+                    school_name: c.name,
+                    client_id: c.id,
+                    contact_person: c.contact_person || prev.contact_person,
+                    phone: c.phone || prev.phone,
+                    email: c.email || prev.email,
+                  }));
+                }}
+                disabled={formLocked}
+              />
             </Field>
             <Field label="Contact Person" required><input className={inputCls} value={b.contact_person || ''} onChange={(e) => set('contact_person', e.target.value)} disabled={formLocked} /></Field>
             <Field label="Phone" required><PhoneInput value={b.phone || ''} onChange={(v) => set('phone', v)} disabled={formLocked} /></Field>
