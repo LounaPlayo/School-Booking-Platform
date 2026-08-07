@@ -324,7 +324,7 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
           ) : <span />}
           <div className="flex gap-2">
             <button onClick={onCancel} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
-            <button onClick={handleSave} disabled={saving || formLocked} className="btn-primary px-4 py-2 text-sm font-semibold rounded-lg disabled:opacity-60">
+            <button onClick={handleSave} disabled={saving || (formLocked && depositLocked)} className="btn-primary px-4 py-2 text-sm font-semibold rounded-lg disabled:opacity-60">
               {saving ? 'Saving…' : 'Save Booking'}
             </button>
           </div>
