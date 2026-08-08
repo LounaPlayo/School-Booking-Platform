@@ -69,6 +69,9 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
   // legitimately nothing to fill in, and the booking can still be
   // Confirmed without one.
   const depositDetailsMandatory = depositMandatory && b.deposit_status !== 'Not Required';
+  const [useCustomTime, setUseCustomTime] = useState(
+    !!booking.event_time && !EVENT_TIMES.includes(booking.event_time)
+  );
 
   function set(k, v) {
     setB((prev) => {
@@ -215,10 +218,39 @@ export default function BookingForm({ booking, existing, profile, packageRates, 
           <Section title="Event Details">
             <Field label="Event Date" required><input type="date" className={inputCls} value={b.event_date || ''} onChange={(e) => set('event_date', e.target.value)} disabled={formLocked} /></Field>
             <Field label="Event Time" required>
-              <select className={inputCls} value={b.event_time || ''} onChange={(e) => set('event_time', e.target.value)} disabled={formLocked}>
-                <option value="">Select a time</option>
-                {EVENT_TIMES.map((v) => <option key={v}>{v}</option>)}
-              </select>
+              {useCustomTime ? (
+                <div className="flex gap-1.5">
+                  <input
+                    className={inputCls}
+                    value={b.event_time || ''}
+                    onChange={(e) => set('event_time', e.target.value)}
+                    placeholder="e.g. 14:00 - 15:30"
+                    disabled={formLocked}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setUseCustomTime(false); set('event_time', ''); }}
+                    className="text-xs text-slate-500 hover:text-slate-700 shrink-0 px-2"
+                    disabled={formLocked}
+                  >
+                    Use list
+                  </button>
+                </div>
+              ) : (
+                <select
+                  className={inputCls}
+                  value={b.event_time || ''}
+                  onChange={(e) => {
+                    if (e.target.value === '__custom__') { setUseCustomTime(true); set('event_time', ''); }
+                    else set('event_time', e.target.value);
+                  }}
+                  disabled={formLocked}
+                >
+                  <option value="">Select a time</option>
+                  {EVENT_TIMES.map((v) => <option key={v}>{v}</option>)}
+                  <option value="__custom__">Other (type manually)</option>
+                </select>
+              )}
             </Field>
             <Field label="Grade Level / Age" required><input className={inputCls} value={b.grade_level || ''} onChange={(e) => set('grade_level', e.target.value)} disabled={formLocked} /></Field>
             <Field label="# Students" required><input type="number" className={inputCls} value={b.number_of_students || ''} onChange={(e) => set('number_of_students', e.target.value)} disabled={formLocked} /></Field>

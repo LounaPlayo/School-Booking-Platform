@@ -1,4 +1,8 @@
 export const VENUES = ['Playo', 'Oh Chateau'];
+// Rough daily capacity per venue, used only to warn the team as a day
+// approaches/exceeds it - adjust these two numbers if actual venue
+// capacity is different.
+export const DAILY_CAPACITY = { Playo: 100, 'Oh Chateau': 100 };
 export const EVENT_TYPES = [
   'School Trip / Field Visit',
   'School Workshop',

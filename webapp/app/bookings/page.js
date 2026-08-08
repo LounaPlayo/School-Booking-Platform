@@ -151,7 +151,7 @@ function BookingsPageInner() {
 
   const [completeTarget, setCompleteTarget] = useState(null);
 
-  async function confirmCompletion({ settled_cash, settled_wish, settled_bank, balance_settled_date, team_assigned, final_number_of_kids, total_price }) {
+  async function confirmCompletion({ settled_cash, settled_wish, settled_bank, balance_settled_date, team_assigned, final_number_of_kids, total_price, add_on_food, add_on_fee }) {
     setErrorMsg('');
     const { error } = await supabase
       .from('bookings')
@@ -164,6 +164,8 @@ function BookingsPageInner() {
         team_assigned,
         final_number_of_kids,
         total_price,
+        add_on_food,
+        add_on_fee,
         updated_by: profile.id,
       })
       .eq('id', completeTarget.id);
@@ -222,7 +224,7 @@ function BookingsPageInner() {
                     <th className="px-5 py-3 font-semibold">#</th>
                     <th className="px-5 py-3 font-semibold">School</th>
                     <th className="px-5 py-3 font-semibold">Venue</th>
-                    <th className="px-5 py-3 font-semibold">Event Date</th>
+                    <th className="px-5 py-3 font-semibold whitespace-nowrap">Event Date</th>
                     <th className="px-5 py-3 font-semibold">Status</th>
                     <th className="px-5 py-3 font-semibold text-right">Total Amount</th>
                     <th className="px-5 py-3 font-semibold">Deposit</th>

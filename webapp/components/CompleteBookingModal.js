@@ -3,12 +3,21 @@
 import { useState } from 'react';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import DualCurrencyInput from './DualCurrencyInput';
+import { ADD_ON_FOOD_OPTIONS } from '../lib/constants';
+
+function SummaryRow({ label, value, bold }) {
+  return (
+    <div className={`flex items-center justify-between py-1 ${bold ? 'font-semibold text-slate-900' : 'text-slate-600'}`}>
+      <span className="text-sm">{label}</span>
+      <span className="text-sm font-mono">${value.toFixed(2)}</span>
+    </div>
+  );
+}
 
 export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
   const isCorrection = booking.booking_status === 'Completed';
   const tentativeKids = parseFloat(booking.number_of_students) || 0;
   const originalTotalPrice = parseFloat(booking.total_price) || 0;
-  const addOnFee = parseFloat(booking.add_on_fee) || 0;
   const depositReceived = parseFloat(booking.deposit_amount_received) || 0;
   // The implied per-student rate from the original booking - works for
   // Special Offer pricing too, since it's just total price / kids booked.
@@ -16,6 +25,8 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
 
   const [finalKids, setFinalKids] = useState(booking.final_number_of_kids ?? booking.number_of_students ?? '');
   const [teamAssigned, setTeamAssigned] = useState(booking.team_assigned || '');
+  const [addOnFood, setAddOnFood] = useState(booking.add_on_food || 'None');
+  const [addOnFee, setAddOnFee] = useState(booking.add_on_fee || '');
   const [cash, setCash] = useState(booking.settled_cash || '');
   const [wish, setWish] = useState(booking.settled_wish || '');
   const [bank, setBank] = useState(booking.settled_bank || '');
@@ -23,11 +34,13 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
   const [saving, setSaving] = useState(false);
 
   const finalKidsNum = parseFloat(finalKids) || 0;
+  const addOnFeeNum = parseFloat(addOnFee) || 0;
   // Recalculate the actual total owed against the FINAL headcount, not
-  // the original tentative one - this is what "amount closed accordingly"
-  // means: fewer/more kids than booked changes what's actually owed.
+  // the original tentative one - fewer/more kids than booked changes
+  // what's actually owed, and so can the final add-on choice.
   const adjustedTotalPrice = Math.round(perStudentRate * finalKidsNum * 100) / 100;
-  const due = Math.max(adjustedTotalPrice + addOnFee - depositReceived, 0);
+  const grandTotal = adjustedTotalPrice + addOnFeeNum;
+  const due = Math.max(grandTotal - depositReceived, 0);
 
   const settled = (parseFloat(cash) || 0) + (parseFloat(wish) || 0) + (parseFloat(bank) || 0);
   const diff = Math.round((settled - due) * 100) / 100;
@@ -45,6 +58,8 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
       team_assigned: teamAssigned,
       final_number_of_kids: finalKidsNum,
       total_price: adjustedTotalPrice, // keeps the DB's settlement math consistent with what's actually owed
+      add_on_food: addOnFood,
+      add_on_fee: addOnFeeNum,
     });
     setSaving(false);
   }
@@ -82,9 +97,33 @@ export default function CompleteBookingModal({ booking, onCancel, onConfirm }) {
           placeholder="Names of staff who worked the event"
         />
 
-        <p className="text-sm text-slate-500 mb-3">
-          Balance due <span className="font-semibold text-slate-700">${due.toFixed(2)}</span>
-        </p>
+        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Add-On</label>
+        <div className="flex gap-2 mb-4">
+          <select
+            className="focus-ring flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg"
+            value={addOnFood}
+            onChange={(e) => setAddOnFood(e.target.value)}
+          >
+            {ADD_ON_FOOD_OPTIONS.map((v) => <option key={v}>{v}</option>)}
+          </select>
+          <input
+            type="number"
+            className="focus-ring w-28 px-3 py-2 text-sm border border-slate-200 rounded-lg"
+            value={addOnFee}
+            onChange={(e) => setAddOnFee(e.target.value)}
+            placeholder="Fee $"
+          />
+        </div>
+
+        <div className="rounded-lg border border-slate-200 p-3 mb-4" style={{ background: '#FAFBFC' }}>
+          <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Summary</h4>
+          <SummaryRow label="Total Amount" value={adjustedTotalPrice} />
+          {addOnFeeNum > 0 && <SummaryRow label="+ Add-On" value={addOnFeeNum} />}
+          <SummaryRow label="Grand Total" value={grandTotal} />
+          <SummaryRow label="− Deposit Paid" value={depositReceived} />
+          <div className="border-t border-slate-300 my-1" />
+          <SummaryRow label="Balance Due" value={due} bold />
+        </div>
 
         <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
           How was it settled? <span className="normal-case font-normal text-slate-400">(enter in $ or switch to LBP)</span>

@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import AppShell from '../../components/AppShell';
 import { useAuth } from '../../lib/AuthProvider';
 import { supabase } from '../../lib/supabaseClient';
-import { STATUS_COLORS } from '../../lib/constants';
+import { STATUS_COLORS, VENUES, DAILY_CAPACITY } from '../../lib/constants';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -60,6 +60,16 @@ export default function CalendarPage() {
   const monthLabel = cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
   const todayKey = toDateKey(new Date());
   const selectedList = selectedDay ? byDate[selectedDay] || [] : [];
+  const capacityByVenue = useMemo(() => {
+    const out = {};
+    VENUES.forEach((v) => {
+      const kids = selectedList
+        .filter((b) => b.venue === v)
+        .reduce((sum, b) => sum + (parseFloat(b.final_number_of_kids ?? b.number_of_students) || 0), 0);
+      out[v] = kids;
+    });
+    return out;
+  }, [selectedList]);
 
   return (
     <AppShell>
@@ -137,6 +147,26 @@ export default function CalendarPage() {
               <h3 className="font-display font-semibold text-slate-900 mb-3">
                 {selectedDay ? new Date(selectedDay).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : 'Select a day'}
               </h3>
+
+              {selectedDay && (
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {VENUES.map((v) => {
+                    const booked = capacityByVenue[v] || 0;
+                    const max = DAILY_CAPACITY[v] || 0;
+                    const pct = max > 0 ? booked / max : 0;
+                    const color = pct >= 1 ? '#DC2626' : pct >= 0.8 ? '#D97706' : '#059669';
+                    return (
+                      <div key={v} className="rounded-lg border border-slate-100 p-2.5">
+                        <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-0.5">{v}</div>
+                        <div className="font-display text-base font-bold" style={{ color }}>
+                          {booked} <span className="text-slate-400 font-normal text-xs">/ {max} kids</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {!selectedDay ? (
                 <p className="text-sm text-slate-400">Click any date to see its bookings.</p>
               ) : selectedList.length === 0 ? (
